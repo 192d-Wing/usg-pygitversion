@@ -24,6 +24,11 @@ scripts keep working.
 uv tool install pygitversion       # or: pipx install pygitversion
 ```
 
+Requires Python 3.11+ and a `git` binary on `PATH`; nothing else. In a
+project that already uses `uv`, `uv add --dev pygitversion` and then
+`uv run gitversion` also works. Until the first PyPI release, install from
+a checkout with `uv tool install /path/to/pygitversion`.
+
 ## Use
 
 ```sh
@@ -72,6 +77,12 @@ CI system.
 
 Not ported: AssemblyInfo / `.csproj` / WiX updaters, the MSBuild task, and
 dynamic remote clone (`/url`). See `PLAN.md` section 1.
+
+## Performance
+
+A 50,000-commit linear history is versioned in about one second with under
+30 MB of additional memory (`tests/perf`). On a real 17,000-commit repository
+the port produces the same output as the .NET tool and runs faster.
 
 ## Security
 

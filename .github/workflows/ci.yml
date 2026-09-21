@@ -69,7 +69,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - run: uv sync --group dev
-      - run: uv run pytest --cov --cov-report=xml -m "not differential and not memory"
+      - run: uv run pytest --cov --cov-report=xml -m "not memory"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: matrix.os == 'ubuntu-latest' && matrix.python == '3.11'
         with:
@@ -92,7 +92,50 @@ jobs:
       - run: echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
       - run: gitversion /version
       - run: uv sync --group dev
-      - run: uv run pytest -m differential
+      # Every ported scenario and the CLI end-to-end tests also run the
+      # reference binary and compare every output variable (PLAN.md D4, D6).
+      - run: uv run pytest -m "not memory" tests/scenarios tests/unit/test_app.py
+        env:
+          PYGITVERSION_DIFFERENTIAL: "1"
+
+  budget:
+    name: performance and memory budget (50k commits)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.11"
+      - run: uv sync --group dev
+      # PLAN.md Phase 6 / 9.4: bounded time and memory on a synthetic history.
+      - run: uv run pytest -m memory -s tests/perf
+
+  integration:
+    name: GitHub Actions integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.11"
+      - run: uv sync
+      # The agent writes GitVersion_* into $GITHUB_ENV (PLAN.md 7.4): a later
+      # step must see them. /nonormalize is not needed: the checkout has one remote.
+      - run: uv run gitversion /output buildserver /output json
+      - name: Variables are visible in a later step
+        run: |
+          test -n "$GitVersion_SemVer"
+          test -n "$GitVersion_FullSemVer"
+          echo "SemVer=$GitVersion_SemVer FullSemVer=$GitVersion_FullSemVer"
+      # The generic export must be eval-safe on the runner's shell.
+      - run: |
+          eval "$(uv run python -m pygitversion --output env --prefix GV_)"
+          test "$GV_SemVer" = "$GitVersion_SemVer"
 
   build:
     name: build wheel + sdist
