@@ -226,6 +226,10 @@ class RepositoryFixture:
         """Create ``name`` at ``at`` (default HEAD) without checkout. Mirrors ``CreateBranch``."""
         self.git("branch", name, *([at] if at else []))
 
+    def commit_date(self, sha: str) -> datetime:
+        """Committer date of ``sha`` as an aware datetime."""
+        return datetime.fromisoformat(self.git("show", "-s", "--format=%cI", sha))
+
     def tag_target(self, tag: str) -> str:
         """SHA of the commit a tag points at (peeled)."""
         return self.git("rev-list", "-n", "1", tag)

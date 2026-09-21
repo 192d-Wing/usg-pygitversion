@@ -63,13 +63,11 @@ _REAL_GITVERSION = _find_reference_binary()
 _DIFFERENTIAL = os.environ.get("PYGITVERSION_DIFFERENTIAL", "") not in ("", "0", "false")
 
 
-def _merge(base: dict[str, Any], extra: Mapping[str, Any]) -> dict[str, Any]:
-    for key, value in extra.items():
-        if isinstance(value, Mapping) and isinstance(base.get(key), dict):
-            _merge(base[key], value)
-        else:
-            base[key] = value
-    return base
+def _hyphenate(value: Any) -> Any:
+    """Recursively turn ``snake_case`` keys into the ``kebab-case`` YAML keys."""
+    if isinstance(value, Mapping):
+        return {str(k).replace("_", "-"): _hyphenate(v) for k, v in value.items()}
+    return value
 
 
 def configure(
@@ -86,11 +84,10 @@ def configure(
     if workflow is not None:
         document["workflow"] = workflow
     for key, value in root.items():
-        document[key.replace("_", "-")] = value
+        document[key.replace("_", "-")] = _hyphenate(value)
     if branches:
-        document["branches"] = {
-            name: {k.replace("_", "-"): v for k, v in cfg.items()} for name, cfg in branches.items()
-        }
+        # Branch names themselves keep their underscores (e.g. "bob_develop").
+        document["branches"] = {name: _hyphenate(cfg) for name, cfg in branches.items()}
     return build(document)
 
 
