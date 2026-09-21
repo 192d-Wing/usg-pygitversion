@@ -68,8 +68,8 @@ def test_upstream_default_patterns_all_compile() -> None:
         r"^hotfix(es)?[\/-](?<BranchName>.+)",
         r"^support[\/-](?<BranchName>.+)",
         r"(?<BranchName>.+)",
-        r"[+=]semver:\s?(breaking|major)",
-        r"=semver:",
+        r"\+semver:\s?(breaking|major)",
+        r"\+semver:\s?(none|skip)",
     ]:
         dotnet.compile(pattern)
 

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 """Build metadata attached to a semantic version (``+5.Branch.main.Sha.abc``).
 
-Ports ``GitVersion.Core/SemVer/SemanticVersionBuildMetaData.cs``. Upstream
+Ports ``GitVersion.Core/SemVer/SemanticVersionBuildMetaData.cs`` (6.8.2). Upstream
 carries a number of "source" fields on this type that the calculator fills
 in (version source SHA, distance, increment, uncommitted changes). They are
 modelled here so the variable provider (Phase 3) can populate them, but
@@ -38,9 +38,6 @@ class BuildMetaData:
         version_source_distance: Non-ignored commits beyond the anchor.
         uncommitted_changes: Count of uncommitted changes in the working tree.
         version_source_increment: Increment applied relative to the baseline.
-        semver_source_semver: Semantic baseline from the selected strategy.
-        semver_source_sha: Commit of the semantic baseline, or ``None``.
-        semver_source_increment: Final increment relative to the semantic baseline.
     """
 
     commits_since_tag: int | None = None
@@ -54,9 +51,11 @@ class BuildMetaData:
     version_source_distance: int = 0
     uncommitted_changes: int = 0
     version_source_increment: VersionField = VersionField.NONE
-    semver_source_semver: SemanticVersion | None = None
-    semver_source_sha: str | None = None
-    semver_source_increment: VersionField = VersionField.NONE
+
+    @property
+    def commits_since_version_source(self) -> int:
+        """Alias of ``version_source_distance`` (upstream ``CommitsSinceVersionSource``)."""
+        return self.version_source_distance
 
     @classmethod
     def empty(cls) -> Self:
