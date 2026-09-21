@@ -222,6 +222,44 @@ class RepositoryFixture:
         """Create ``name`` at ``HEAD`` and check it out. Mirrors upstream ``BranchTo``."""
         self.git("checkout", "--quiet", "-b", name)
 
+    def create_branch(self, name: str, at: str | None = None) -> None:
+        """Create ``name`` at ``at`` (default HEAD) without checkout. Mirrors ``CreateBranch``."""
+        self.git("branch", name, *([at] if at else []))
+
+    def tag_target(self, tag: str) -> str:
+        """SHA of the commit a tag points at (peeled)."""
+        return self.git("rev-list", "-n", "1", tag)
+
+    def create_pull_request_ref(
+        self,
+        source: str,
+        target: str,
+        pr_number: int = 2,
+        *,
+        normalise: bool = False,
+        allow_fast_forward_merge: bool = False,
+    ) -> str:
+        """Mirrors ``CreatePullRequestRef``: a merge commit under ``refs/pull/<n>/merge``.
+
+        The merge is made on a detached checkout of ``target``'s tip so the
+        target branch itself does not move. With ``normalise`` a local branch
+        ``pull/<n>/merge`` is created at the merge commit and checked out.
+        """
+        self.git("checkout", "--quiet", "--detach", target)
+        self._tick()
+        if allow_fast_forward_merge:
+            self.git("merge", "--quiet", "--no-edit", "-m", f"Merge branch '{source}'", source)
+        else:
+            self.git(
+                "merge", "--quiet", "--no-edit", "--no-ff", "-m", f"Merge branch '{source}'", source
+            )
+        sha = self.head_sha
+        self.git("update-ref", f"refs/pull/{pr_number}/merge", sha)
+        self.checkout(target)
+        if normalise:
+            self.git("checkout", "--quiet", "-b", f"pull/{pr_number}/merge", sha)
+        return sha
+
     def checkout(self, ref: str) -> None:
         """Check out an existing branch, tag or SHA."""
         self.git("checkout", "--quiet", ref)
@@ -248,6 +286,22 @@ class RepositoryFixture:
     def merge_no_ff(self, source: str) -> str:
         """Merge ``source`` into the current branch with a merge commit."""
         return self.merge_to(self.current_branch, source=source, no_ff=True)
+
+    def merge_ff(self, source: str) -> str:
+        """Merge ``source`` allowing fast-forward (libgit2 ``Repository.Merge`` default)."""
+        self._tick()
+        self.git("merge", "--quiet", "--no-edit", source)
+        return self.head_sha
+
+    def merge_commit_no_ff(self, sha: str) -> str:
+        """Merge a specific commit with ``--no-ff`` and git's default message."""
+        self._tick()
+        self.git("merge", "--quiet", "--no-edit", "--no-ff", sha)
+        return self.head_sha
+
+    def delete_tag(self, name: str) -> None:
+        """Delete a tag (``Repository.Tags.Remove``)."""
+        self.git("tag", "-d", name)
 
     def delete_branch(self, name: str) -> None:
         """Delete a local branch (``-D``)."""

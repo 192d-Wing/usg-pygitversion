@@ -112,6 +112,8 @@ ignore = [
 "tests/**" = ["S101", "S603", "S607", "D102", "D103", "PLR2004", "ARG001"]
 # Mechanically generated from upstream; one case per line is the point.
 "tests/unit/semver_cases.py" = ["E501"]
+# Scenario names mirror the upstream C# test names verbatim.
+"tests/scenarios/**" = ["E501"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

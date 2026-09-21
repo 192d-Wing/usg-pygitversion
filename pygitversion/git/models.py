@@ -15,7 +15,7 @@ from datetime import datetime
 from pygitversion.git.refname import ReferenceName
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True, eq=False)
 class Commit:
     """A commit.
 
@@ -30,6 +30,20 @@ class Commit:
     parents: tuple[str, ...]
     when: datetime
     message: str
+
+    def __eq__(self, other: object) -> bool:
+        """Equal on SHA, as upstream ``Commit``."""
+        if not isinstance(other, Commit):
+            return NotImplemented
+        return self.sha == other.sha
+
+    def __hash__(self) -> int:
+        """Hash on SHA."""
+        return hash(self.sha)
+
+    def __lt__(self, other: Commit) -> bool:
+        """Order by SHA (upstream ``CompareTo``)."""
+        return self.sha < other.sha
 
     @property
     def short_sha(self) -> str:
@@ -46,17 +60,31 @@ class Commit:
         return self.short_sha
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True, eq=False)
 class Branch:
     """A local or remote-tracking branch.
 
     Attributes:
         name: Reference name.
         tip: SHA the branch points at.
+        is_tracking: True when a local branch has an upstream configured
+            (libgit2 ``Branch.IsTracking``). Used by detached-HEAD branch
+            resolution with ``onlyTrackedBranches``.
     """
 
     name: ReferenceName
     tip: str
+    is_tracking: bool = False
+
+    def __eq__(self, other: object) -> bool:
+        """Equal on canonical name, as upstream ``Branch``."""
+        if not isinstance(other, Branch):
+            return NotImplemented
+        return self.name.canonical == other.name.canonical
+
+    def __hash__(self) -> int:
+        """Hash on canonical name."""
+        return hash(self.name.canonical)
 
     @property
     def is_remote(self) -> bool:
@@ -73,7 +101,7 @@ class Branch:
         return self.name.friendly
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True, eq=False)
 class Tag:
     """A tag, lightweight or annotated.
 
@@ -89,6 +117,16 @@ class Tag:
     target: str
     is_annotated: bool
     tagged_when: datetime | None
+
+    def __eq__(self, other: object) -> bool:
+        """Equal on canonical name, as upstream ``Tag``."""
+        if not isinstance(other, Tag):
+            return NotImplemented
+        return self.name.canonical == other.name.canonical
+
+    def __hash__(self) -> int:
+        """Hash on canonical name."""
+        return hash(self.name.canonical)
 
     def __str__(self) -> str:
         """The friendly name."""

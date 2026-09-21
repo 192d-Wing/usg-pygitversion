@@ -102,7 +102,7 @@ class GitRepository:
         """All local and remote-tracking branches, sorted by canonical name."""
         out = self.git.run(
             "for-each-ref",
-            "--format=%(refname)%00%(objectname)",
+            "--format=%(refname)%00%(objectname)%00%(upstream)",
             "refs/heads/",
             "refs/remotes/",
         )
@@ -110,11 +110,11 @@ class GitRepository:
         for line in out.splitlines():
             if not line:
                 continue
-            refname, sha = line.split("\x00", 1)
+            refname, sha, upstream = line.split("\x00", 2)
             # Symbolic refs such as refs/remotes/origin/HEAD are not branches.
             if refname.endswith("/HEAD"):
                 continue
-            result.append(Branch(ReferenceName(refname), sha))
+            result.append(Branch(ReferenceName(refname), sha, is_tracking=bool(upstream)))
         return tuple(sorted(result, key=lambda b: b.name.canonical))
 
     @functools.cached_property
@@ -180,18 +180,24 @@ class GitRepository:
         *,
         first_parent: bool = False,
         paths: Iterable[str] = (),
+        order: str = "default",
     ) -> Generator[Commit, None, None]:
         """Stream commits reachable from ``include`` but not ``exclude``.
 
-        Equivalent to ``git log <include> ^<exclude>`` in git's default
-        (reverse chronological, topologically consistent) order. Stops after
-        ``max_commits`` with an error rather than growing without bound.
+        Equivalent to ``git log <include> ^<exclude>``. The default order is
+        git's (reverse chronological by commit date), which matches
+        libgit2's ``GIT_SORT_TIME`` that upstream's ``Branch.Commits`` uses.
+        Stops after ``max_commits`` with an error rather than growing without
+        bound.
 
         Args:
             include: Revision(s) to start from.
             exclude: Revision(s) whose ancestry is excluded.
             first_parent: Follow only first parents (mainline walks).
             paths: Restrict to commits touching these paths.
+            order: ``"default"``, ``"date"`` (``--date-order``, upstream
+                ``Topological | Time``) or ``"topo-reverse"``
+                (``--topo-order --reverse``, upstream ``Topological | Reverse``).
 
         Yields:
             :class:`Commit` objects, newest first.
@@ -203,6 +209,13 @@ class GitRepository:
         args = ["log", _LOG_FORMAT]
         if first_parent:
             args.append("--first-parent")
+        if order == "date":
+            args.append("--date-order")
+        elif order == "topo-reverse":
+            args += ["--topo-order", "--reverse"]
+        elif order != "default":
+            msg = f"unknown walk order {order!r}"
+            raise ValueError(msg)
         args += includes
         args += [f"^{rev}" for rev in exclude]
         args.append("--")
