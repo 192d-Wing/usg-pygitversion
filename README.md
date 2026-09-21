@@ -4,8 +4,9 @@
 Semantic versioning from git history, without .NET. A pure-Python port of
 [GitVersion](https://gitversion.net) 6.8.2.
 
-> **Status:** Phase 0 (project bootstrap). The calculation engine is not yet
-> ported; see `PLAN.md` for the roadmap and every design decision.
+> **Status:** Phases 0-2 complete (bootstrap, semver + git foundations,
+> configuration). The calculation engine lands in Phase 3; see `PLAN.md`
+> for the roadmap and every design decision.
 
 ## Why
 
