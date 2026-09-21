@@ -1,8 +1,5 @@
 # SPDX-License-Identifier: MIT
-"""Port of upstream ``IntegrationTests/OtherScenarios.cs`` (6.8.2).
-
-Remote-repository cases land with Phase 5.
-"""
+"""Port of upstream ``IntegrationTests/OtherScenarios.cs`` (6.8.2)."""
 
 from __future__ import annotations
 
@@ -10,14 +7,21 @@ from typing import Any
 
 import pytest
 
-from tests.scenarios.dsl import GitFlowScenario, Scenario, gitflow, githubflow
+from tests.scenarios.dsl import GitFlowScenario, RemoteScenario, Scenario, gitflow, githubflow
 
 pytestmark = pytest.mark.scenario
 
 
-@pytest.mark.skip(reason="remote repository fixture lands in Phase 5")
 def test_do_not_blow_up_when_main_and_develop_point_at_same_commit() -> None:
-    pass
+    with RemoteScenario() as f:
+        f.make_a_commit()
+        f.make_a_tagged_commit("1.0.0")
+        f.make_a_commit()
+        f.create_branch("develop")
+        f.local.fetch()
+        f.local.checkout(f.head_sha)
+        f.local.delete_branch("main")
+        f.assert_full_semver("1.0.1-1")
 
 
 def test_allow_not_having_main() -> None:

@@ -1,8 +1,5 @@
 # SPDX-License-Identifier: MIT
-"""Port of upstream ``IntegrationTests/MainlineDevelopmentScenarios.cs`` (6.8.2).
-
-The remote-repository case waits for the Phase 5 fixture.
-"""
+"""Port of upstream ``IntegrationTests/MainlineDevelopmentScenarios.cs`` (6.8.2)."""
 
 from __future__ import annotations
 
@@ -11,7 +8,7 @@ from typing import Any
 import pytest
 from pygitversion.config.schema import GitVersionConfiguration
 
-from tests.scenarios.dsl import Scenario, gitflow
+from tests.scenarios.dsl import RemoteScenario, Scenario, gitflow
 from tests.scenarios.test_version_bumping_scenarios import CONVENTIONAL_COMMIT_PATTERNS
 
 pytestmark = pytest.mark.scenario
@@ -396,11 +393,16 @@ def test_branch_without_merge_base_mainline_branch_is_found() -> None:
         f.assert_full_semver("0.0.4-issue-branch.1", c)
 
 
-@pytest.mark.skip(reason="remote repository fixture lands in Phase 5")
 def test_given_a_remote_git_repository_with_commits_then_cloned_local_develop_should_match() -> (
     None
 ):
-    pass
+    c = mainline()
+    with RemoteScenario() as f:
+        f.assert_full_semver("0.0.5", c)
+        f.branch_to("develop")
+        f.assert_full_semver("0.1.0-alpha.0", c)
+        with f.clone() as local:
+            local.assert_full_semver("0.1.0-alpha.0", c)
 
 
 @pytest.mark.parametrize(

@@ -1,14 +1,11 @@
 # SPDX-License-Identifier: MIT
-"""Ports of ``VersionInMergedBranchNameScenarios.cs`` and ``VersionInCurrentBranchNameScenarios.cs``.
-
-Remote-repository cases need the clone/fetch fixture and land with Phase 5.
-"""
+"""Ports of ``VersionInMergedBranchNameScenarios.cs`` and ``VersionInCurrentBranchNameScenarios.cs``."""
 
 from __future__ import annotations
 
 import pytest
 
-from tests.scenarios.dsl import GitFlowScenario, Scenario, gitflow
+from tests.scenarios.dsl import GitFlowScenario, RemoteScenario, Scenario, gitflow
 
 pytestmark = pytest.mark.scenario
 
@@ -51,9 +48,23 @@ def test_merged_takes_version_from_name_of_branch_that_is_release_by_config() ->
         f.assert_full_semver("2.1.0-alpha.2", configuration)
 
 
-@pytest.mark.skip(reason="remote repository fixture lands in Phase 5")
 def test_merged_takes_version_from_name_of_remote_release_branch_in_origin() -> None:
-    pass
+    with RemoteScenario() as f:
+        f.branch_to("release/2.0.0")
+        f.make_a_commit()
+        f.local.fetch()
+        f.local.merge_no_ff("origin/release/2.0.0")
+        f.local.assert_full_semver("2.0.0-7")
+
+
+def test_merged_does_not_take_version_from_name_of_remote_release_branch_in_custom_remote() -> None:
+    with RemoteScenario() as f:
+        f.local.rename_remote("origin", "upstream")
+        f.branch_to("release/2.0.0")
+        f.make_a_commit()
+        f.local.fetch("upstream")
+        f.local.merge_no_ff("upstream/release/2.0.0")
+        f.local.assert_full_semver("0.0.1-7")
 
 
 # -- current branch name -------------------------------------------------------
@@ -78,6 +89,22 @@ def test_current_takes_version_from_name_of_branch_that_is_release_by_config() -
         f.assert_full_semver("2.0.0-1", configuration)
 
 
-@pytest.mark.skip(reason="remote repository fixture lands in Phase 5")
 def test_current_takes_version_from_name_of_remote_release_branch_in_origin() -> None:
-    pass
+    with RemoteScenario() as f:
+        f.branch_to("release/2.0.0")
+        f.make_a_commit()
+        f.local.fetch()
+        f.local.checkout("origin/release/2.0.0")
+        f.local.assert_full_semver("2.0.0-beta.1+6")
+
+
+def test_current_does_not_take_version_from_name_of_remote_release_branch_in_custom_remote() -> (
+    None
+):
+    with RemoteScenario() as f:
+        f.local.rename_remote("origin", "upstream")
+        f.branch_to("release/2.0.0")
+        f.make_a_commit()
+        f.local.fetch("upstream")
+        f.local.checkout("upstream/release/2.0.0")
+        f.local.assert_full_semver("0.0.1-upstream-release-2-0-0.1+6")

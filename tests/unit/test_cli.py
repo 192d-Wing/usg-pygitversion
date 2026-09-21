@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-"""Tests for the Phase 0 CLI surface."""
+"""Tests for the CLI entry point (help, version, error reporting, module invocation)."""
 
 from __future__ import annotations
 
@@ -8,24 +8,7 @@ import sys
 
 import pytest
 from pygitversion import __version__
-from pygitversion.cli.main import main, translate_dotnet_style
-
-
-@pytest.mark.parametrize(
-    ("argv", "expected"),
-    [
-        (["/version"], ["--version"]),
-        (["/?"], ["--help"]),
-        (["/verbosity", "Quiet"], ["--verbosity", "Quiet"]),
-        (["/l", "out.log"], ["--log-file", "out.log"]),
-        # Absolute POSIX paths must survive untouched.
-        (["/home/me/repo"], ["/home/me/repo"]),
-        (["--version"], ["--version"]),
-        (["/b", "main", "--nofetch"], ["--branch", "main", "--nofetch"]),
-    ],
-)
-def test_translate_dotnet_style(argv: list[str], expected: list[str]) -> None:
-    assert translate_dotnet_style(argv) == expected
+from pygitversion.cli.main import main
 
 
 def test_version_flag_prints_version(capsys: pytest.CaptureFixture[str]) -> None:
@@ -33,22 +16,26 @@ def test_version_flag_prints_version(capsys: pytest.CaptureFixture[str]) -> None
     assert capsys.readouterr().out.strip() == __version__
 
 
-def test_help_exits_zero() -> None:
-    assert main(["/?"]) == 0
+@pytest.mark.parametrize("flag", ["/?", "-h", "--help", "?", "/help"])
+def test_help_exits_zero_and_shows_banner(flag: str, capsys: pytest.CaptureFixture[str]) -> None:
+    assert main([flag]) == 0
+    out = capsys.readouterr().out
+    assert out.startswith(f"GitVersion {__version__}\n\n")
+    assert "/showvariable" in out
+    assert "/output env" in out
 
 
-def test_bad_verbosity_is_usage_error() -> None:
-    with pytest.raises(SystemExit) as exc:
-        main(["--verbosity", "loud"])
-    assert exc.value.code == 2
+def test_bad_verbosity_is_a_usage_error(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["--verbosity", "loud"]) == 1
+    assert "Could not parse Verbosity value 'loud'" in capsys.readouterr().err
 
 
-def test_unported_path_fails_cleanly(capsys: pytest.CaptureFixture[str]) -> None:
-    # Phase 0: calculation is not wired; the CLI must fail with exit 1 and a
-    # one-line message, no traceback (SI-11).
-    assert main([]) == 1
+def test_not_a_repository_fails_cleanly(
+    tmp_path: object, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main([str(tmp_path)]) == 1
     err = capsys.readouterr().err
-    assert "Phase 3" in err
+    assert err.startswith("An error occurred:\n")
     assert "Traceback" not in err
 
 

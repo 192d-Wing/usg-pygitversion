@@ -120,6 +120,10 @@ def _norm(value: object) -> str:
 class Scenario(RepositoryFixture):
     """A repository fixture with GitVersion assertions (``EmptyRepositoryFixture``)."""
 
+    def clone(self) -> Scenario:
+        """A fresh clone of this repository (``CloneRepository``); caller closes it."""
+        return Scenario(clone_from=self)
+
     def create_and_merge_branch_into_develop(self, branch_name: str) -> None:
         """Ports ``CreateAndMergeBranchIntoDevelop`` from the merged-branch-name scenarios."""
         self.branch_to(branch_name)
@@ -218,6 +222,24 @@ class Scenario(RepositoryFixture):
                 f"  {k}: {a!r} != {b!r}" for k, (a, b) in mismatches.items()
             )
             raise AssertionError(msg)
+
+
+class RemoteScenario(Scenario):
+    """Ports ``RemoteRepositoryFixture``: a remote with five commits plus a clone.
+
+    ``self`` is the remote; :attr:`local` is the clone (``LocalRepositoryFixture``).
+    """
+
+    def __init__(self, branch_name: str = "main") -> None:
+        """Create the remote with five commits and clone it."""
+        super().__init__(branch_name)
+        self.make_commits(5)
+        self.local = self.clone()
+
+    def close(self) -> None:
+        """Remove both repositories."""
+        self.local.close()
+        super().close()
 
 
 class GitFlowScenario(Scenario):

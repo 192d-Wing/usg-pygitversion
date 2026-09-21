@@ -8,7 +8,8 @@
 # ---------------------------------------------------------------------------
 
 [build-system]
-requires = ["hatchling>=1.27"]
+# PyYAML is needed at build time because the version hook runs pygitversion itself.
+requires = ["hatchling>=1.27", "pyyaml>=6.0"]
 build-backend = "hatchling.build"
 
 [project]
@@ -68,9 +69,14 @@ dev = [
 # hatch
 # ---------------------------------------------------------------------------
 [tool.hatch.version]
-# Phase 0: static placeholder. Phase 5 replaces this with a build hook that
-# runs pygitversion on its own repository (PLAN.md 8.3).
-path = "pygitversion/__about__.py"
+# The package versions itself: hatch_build.py runs the in-tree calculator on
+# this repository and maps SemVer to PEP 440 (PLAN.md 8.3).
+source = "code"
+path = "hatch_build.py"
+expression = "resolve_version()"
+
+[tool.hatch.build.hooks.custom]
+# Writes pygitversion/_version.py into every build (hatch_build.py).
 
 [tool.hatch.build.targets.sdist]
 include = ["pygitversion/", "tests/", "docs/", "PLAN.md", "README.md", "LICENSE", "SECURITY.md"]

@@ -71,14 +71,28 @@ class RepositoryFixture:
             to ``main``.
     """
 
-    def __init__(self, default_branch: str = "main") -> None:
-        """Create the temporary directory and initialise an empty repository."""
+    def __init__(
+        self, default_branch: str = "main", *, clone_from: RepositoryFixture | None = None
+    ) -> None:
+        """Create the temporary directory and initialise (or clone) a repository.
+
+        Args:
+            default_branch: Name of the initial branch (ignored when cloning).
+            clone_from: Clone this fixture instead of creating an empty
+                repository; the clock continues from the source so commit
+                dates stay ordered.
+        """
         self._tmp = tempfile.TemporaryDirectory(prefix="pygitversion-test-")
         self.path = Path(self._tmp.name).resolve()
         self._clock = _EPOCH
         self._commit_count = 0
         self.default_branch = default_branch
-        self.git("init", "--quiet", f"--initial-branch={default_branch}")
+        if clone_from is None:
+            self.git("init", "--quiet", f"--initial-branch={default_branch}")
+        else:
+            self._clock = clone_from._clock
+            self._commit_count = clone_from._commit_count
+            self.git("clone", "--quiet", str(clone_from.path), ".")
         # Repository-local config only; global/system config is disabled in env.
         self.git("config", "user.name", _AUTHOR_NAME)
         self.git("config", "user.email", _AUTHOR_EMAIL)
@@ -274,6 +288,14 @@ class RepositoryFixture:
         """Check out an existing branch, tag or SHA."""
         self.git("checkout", "--quiet", ref)
 
+    def fetch(self, remote: str = "origin") -> None:
+        """``git fetch <remote>`` (the clone fixture's source is a local path)."""
+        self.git("fetch", "--quiet", remote)
+
+    def rename_remote(self, old: str, new: str) -> None:
+        """Rename a remote, as upstream ``Network.Remotes.RenameRemote``."""
+        self.git("remote", "rename", old, new)
+
     def merge_to(self, target: str, *, source: str | None = None, no_ff: bool = True) -> str:
         """Merge ``source`` (default: current branch) into ``target``.
 
@@ -289,9 +311,18 @@ class RepositoryFixture:
         args = ["merge", "--quiet", "--no-edit"]
         if no_ff:
             args.append("--no-ff")
-        args += ["-m", f"Merge branch '{src}' into {target}", src]
+        # libgit2 wording: remote-tracking branches get their own prefix.
+        kind = "remote-tracking branch" if self._is_remote_tracking(src) else "branch"
+        args += ["-m", f"Merge {kind} '{src}' into {target}", src]
         self.git(*args)
         return self.head_sha
+
+    def _is_remote_tracking(self, name: str) -> bool:
+        return bool(
+            self.git("show-ref", "--verify", "--quiet", f"refs/remotes/{name}", check=False)
+        ) or (
+            self.git("rev-parse", "--verify", "--quiet", f"refs/remotes/{name}", check=False) != ""
+        )
 
     def merge_no_ff(self, source: str) -> str:
         """Merge ``source`` into the current branch with a merge commit."""

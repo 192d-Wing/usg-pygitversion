@@ -95,6 +95,11 @@ class GitRepository:
         """True when ``HEAD`` does not point at a branch."""
         return not self.git.run("symbolic-ref", "--quiet", "HEAD", check=False)
 
+    def remotes(self) -> tuple[str, ...]:
+        """Configured remote names (``git remote``)."""
+        out = self.git.run("remote")
+        return tuple(line for line in out.splitlines() if line)
+
     # -- refs ----------------------------------------------------------------
 
     @functools.cached_property

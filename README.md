@@ -4,11 +4,12 @@
 Semantic versioning from git history, without .NET. A pure-Python port of
 [GitVersion](https://gitversion.net) 6.8.2.
 
-> **Status:** Phases 0-4 complete: the calculation engine for the GitFlow,
-> GitHubFlow and TrunkBased (Mainline) workflows is ported and verified
-> against the reference 6.8.2 binary on 500+ upstream scenarios. The CLI,
-> outputs and build agents land in Phase 5; see `PLAN.md` for the roadmap
-> and every design decision.
+> **Status:** Phases 0-5 complete: the calculation engine for the GitFlow,
+> GitHubFlow and TrunkBased (Mainline) workflows, the CLI, all outputs,
+> the cache, the GitHub Actions and GitLab CI agents and the generic
+> environment export are ported and verified against the reference 6.8.2
+> binary on 500+ upstream scenarios. Phase 6 (hardening and the first
+> release) is next; see `PLAN.md` for the roadmap and every design decision.
 
 ## Why
 
@@ -26,11 +27,30 @@ uv tool install pygitversion       # or: pipx install pygitversion
 ## Use
 
 ```sh
-gitversion                          # JSON, same as upstream
-gitversion /showvariable SemVer     # upstream /flag syntax works
-gitversion --showvariable SemVer    # so does --flag syntax
-python -m pygitversion --output env # shell exports for any CI system
+gitversion                              # JSON, same as upstream
+gitversion /showvariable SemVer         # upstream /flag syntax works
+gitversion --showvariable SemVer        # so does --flag syntax
+gitversion /format "{Major}.{Minor}"    # custom formatting
+gitversion /output dotenv               # GitVersion_<Name>='value' lines
+gitversion /output file /outputfile v.json
+gitversion /showconfig                  # effective configuration as YAML
+gitversion /overrideconfig tag-prefix=v /nocache
+gitversion /output buildserver          # GitHub Actions / GitLab CI integration
 ```
+
+For build servers without a dedicated agent, export the variables into
+the environment of a shell or a file:
+
+```sh
+eval "$(python -m pygitversion --output env)"                       # sh/bash/zsh
+python -m pygitversion --output env --shell powershell | Invoke-Expression
+python -m pygitversion --output env --shell cmd > gv.bat && call gv.bat
+python -m pygitversion --env-file "$SOME_CI_ENV_FILE"               # append KEY=value
+```
+
+Values are quoted for the chosen shell, so branch names cannot inject
+commands. `--prefix` changes the `GitVersion_` prefix. Run
+`gitversion /?` for the full argument list.
 
 From Python, in a build script:
 

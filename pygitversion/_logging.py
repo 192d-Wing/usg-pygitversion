@@ -14,8 +14,11 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
+import time
 from enum import StrEnum
 from pathlib import Path
+from typing import ClassVar
 
 LOGGER_NAME = "pygitversion"
 
@@ -34,8 +37,8 @@ class Verbosity(StrEnum):
         """Translate to a :mod:`logging` level."""
         return {
             Verbosity.QUIET: logging.CRITICAL + 10,  # effectively off
-            Verbosity.MINIMAL: logging.ERROR,
-            Verbosity.NORMAL: logging.WARNING,
+            Verbosity.MINIMAL: logging.WARNING,
+            Verbosity.NORMAL: logging.INFO,
             Verbosity.VERBOSE: logging.INFO,
             Verbosity.DIAGNOSTIC: logging.DEBUG,
         }[self]
@@ -56,34 +59,64 @@ class Verbosity(StrEnum):
             raise ValueError(msg) from None
 
 
-def configure(verbosity: Verbosity, log_file: Path | None = None) -> logging.Logger:
+class _UpstreamFormatter(logging.Formatter):
+    """``LEVEL [yy-MM-dd HH:mm:ss:ff] message``, the reference tool's line format."""
+
+    _LEVELS: ClassVar[dict[str, str]] = {
+        "DEBUG": "DEBUG",
+        "INFO": "INFO",
+        "WARNING": "WARN",
+        "ERROR": "ERROR",
+        "CRITICAL": "ERROR",
+    }
+
+    def format(self, record: logging.LogRecord) -> str:
+        """Render one record."""
+        stamp = time.strftime("%y-%m-%d %H:%M:%S", time.localtime(record.created))
+        hundredths = int(record.msecs / 10)
+        level = self._LEVELS.get(record.levelname, record.levelname)
+        return f"{level} [{stamp}:{hundredths:02d}] {record.getMessage()}"
+
+
+def configure(
+    verbosity: Verbosity, log_file: Path | None = None, *, console: bool = False
+) -> logging.Logger:
     """Configure the package logger and return it.
 
-    Handlers write to stderr so stdout stays clean for machine-readable
-    output (JSON, dotenv, shell exports).
+    Warnings and errors always go to stderr so stdout stays clean for
+    machine-readable output. ``console=True`` (``/output buildserver`` or
+    ``/l console``) additionally mirrors the log to stdout in the reference
+    tool's format, as upstream does.
 
     Args:
-        verbosity: Desired level.
+        verbosity: Desired level for the console and file appenders.
         log_file: Optional file to append to. Created ``0o600`` (SC-28,
             AU-9) so other local users cannot read the build log.
+        console: Mirror the log to stdout.
     """
     logger = logging.getLogger(LOGGER_NAME)
-    logger.setLevel(verbosity.level)
+    logger.setLevel(min(verbosity.level, logging.WARNING))
     logger.handlers.clear()  # idempotent: safe to call more than once
     logger.propagate = False
 
-    fmt = logging.Formatter("%(asctime)s %(levelname)-8s %(name)s: %(message)s")
-
-    stream = logging.StreamHandler()  # defaults to sys.stderr
-    stream.setFormatter(fmt)
-    logger.addHandler(stream)
+    if console:
+        stdout = logging.StreamHandler(sys.stdout)
+        stdout.setLevel(verbosity.level)
+        stdout.setFormatter(_UpstreamFormatter())
+        logger.addHandler(stdout)
+    else:
+        stderr = logging.StreamHandler(sys.stderr)
+        stderr.setLevel(logging.WARNING)
+        stderr.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
+        logger.addHandler(stderr)
 
     if log_file is not None:
         # Open with an explicit restrictive mode rather than relying on umask.
         fd = os.open(log_file, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
         file_handler = logging.FileHandler(log_file, encoding="utf-8")
         os.close(fd)  # FileHandler opened its own descriptor; ours only set the mode
-        file_handler.setFormatter(fmt)
+        file_handler.setLevel(verbosity.level)
+        file_handler.setFormatter(_UpstreamFormatter())
         logger.addHandler(file_handler)
 
     return logger

@@ -1,9 +1,20 @@
 # SPDX-License-Identifier: MIT
-"""Package version metadata.
+"""Package version.
 
-Phase 0 uses a static placeholder. From Phase 5 onward a hatch build hook
-computes this value by running pygitversion on its own repository and
-normalising the result to PEP 440 (PLAN.md section 8.3).
+At build time ``hatch_build.py`` writes ``_version.py`` from the tool's own
+calculation (PLAN.md 8.3). In a plain source checkout that file does not
+exist, so a development placeholder is used instead.
 """
 
-__version__ = "0.0.1"
+from __future__ import annotations
+
+__version__: str
+__gitversion__: str | None
+
+try:
+    from pygitversion._version import __gitversion__, __version__
+except ImportError:  # pragma: no cover -- source checkout without a build
+    __version__ = "0.0.0.dev0"
+    __gitversion__ = None
+
+__all__ = ["__gitversion__", "__version__"]
