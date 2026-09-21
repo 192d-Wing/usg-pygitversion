@@ -6,8 +6,8 @@ from __future__ import annotations
 from importlib import resources
 
 import pytest
-from pygitversion.config.yaml_io import MAX_DOCUMENT_BYTES, dump_mapping, load_mapping
-from pygitversion.errors import ConfigurationError
+from usg_pygitversion.config.yaml_io import MAX_DOCUMENT_BYTES, dump_mapping, load_mapping
+from usg_pygitversion.errors import ConfigurationError
 
 
 def test_load_scalars_follow_yaml_1_2_core() -> None:
@@ -74,6 +74,10 @@ def test_containers_layout() -> None:
 def test_presets_round_trip_byte_for_byte(name: str) -> None:
     # load -> dump must reproduce upstream's approved serialisation exactly,
     # which proves both the loader's typing and the emitter's formatting.
-    text = resources.files("pygitversion.config.presets").joinpath(name).read_text(encoding="utf-8")
+    text = (
+        resources.files("usg_pygitversion.config.presets")
+        .joinpath(name)
+        .read_text(encoding="utf-8")
+    )
     body = "".join(line for line in text.splitlines(keepends=True) if not line.startswith("#"))
     assert dump_mapping(load_mapping(body)) == body

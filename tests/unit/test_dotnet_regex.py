@@ -4,8 +4,8 @@
 from __future__ import annotations
 
 import pytest
-from pygitversion.dotnet import regex as dotnet
-from pygitversion.errors import ConfigurationError
+from usg_pygitversion.dotnet import regex as dotnet
+from usg_pygitversion.errors import ConfigurationError
 
 
 @pytest.mark.parametrize(

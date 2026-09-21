@@ -7,7 +7,7 @@ from datetime import timedelta
 from typing import Any
 
 import pytest
-from pygitversion.errors import RepositoryError
+from usg_pygitversion.errors import RepositoryError
 
 from tests.scenarios.dsl import Scenario, gitflow, githubflow, trunkbased
 

@@ -7,16 +7,16 @@ Ports the relevant cases of upstream ``ConfigurationExtensionsTests``.
 from __future__ import annotations
 
 import pytest
-from pygitversion.config import (
+from usg_pygitversion.config import (
     DeploymentMode,
     EffectiveConfiguration,
     IncrementStrategy,
     get_branch_configuration,
     get_effective_configuration,
 )
-from pygitversion.config.effective import is_release_branch
-from pygitversion.config.provider import build
-from pygitversion.git import ReferenceName
+from usg_pygitversion.config.effective import is_release_branch
+from usg_pygitversion.config.provider import build
+from usg_pygitversion.git import ReferenceName
 
 
 @pytest.mark.parametrize(

@@ -14,7 +14,7 @@ import sys
 import time
 
 import pytest
-from pygitversion import calculate
+from usg_pygitversion import calculate
 
 from tests.fixtures import RepositoryFixture
 
@@ -24,9 +24,9 @@ resource = pytest.importorskip("resource", reason="resource module is POSIX-only
 
 pytestmark = pytest.mark.memory
 
-COMMITS = int(os.environ.get("PYGITVERSION_PERF_COMMITS", "50000"))
-TIME_BUDGET_SECONDS = float(os.environ.get("PYGITVERSION_PERF_SECONDS", "10"))
-MEMORY_BUDGET_MB = int(os.environ.get("PYGITVERSION_PERF_MB", "512"))
+COMMITS = int(os.environ.get("USG_PYGITVERSION_PERF_COMMITS", "50000"))
+TIME_BUDGET_SECONDS = float(os.environ.get("USG_PYGITVERSION_PERF_SECONDS", "10"))
+MEMORY_BUDGET_MB = int(os.environ.get("USG_PYGITVERSION_PERF_MB", "512"))
 
 
 def build_linear_history(repo: RepositoryFixture, commits: int, tag_at: int) -> None:

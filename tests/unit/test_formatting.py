@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import pytest
-from pygitversion.formatting import TemplateError, format_with
+from usg_pygitversion.formatting import TemplateError, format_with
 
 _MEMBERS = {"Major": "1", "Minor": "2", "Empty": "", "Name": "hello world", "Missing": None}
 

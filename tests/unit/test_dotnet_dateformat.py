@@ -6,8 +6,8 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
-from pygitversion.dotnet.dateformat import format_datetime
-from pygitversion.errors import ConfigurationError
+from usg_pygitversion.dotnet.dateformat import format_datetime
+from usg_pygitversion.errors import ConfigurationError
 
 _DT = datetime(2024, 3, 7, 14, 5, 9, 123456, tzinfo=timezone(timedelta(hours=-5, minutes=-30)))
 

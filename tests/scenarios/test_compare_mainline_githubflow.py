@@ -8,7 +8,7 @@ once with ``Mainline``. Without Mainline the test tags each release manually.
 from __future__ import annotations
 
 import pytest
-from pygitversion.config.schema import GitVersionConfiguration
+from usg_pygitversion.config.schema import GitVersionConfiguration
 
 from tests.scenarios.dsl import Scenario, githubflow
 

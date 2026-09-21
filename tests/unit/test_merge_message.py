@@ -4,10 +4,10 @@
 from __future__ import annotations
 
 import pytest
-from pygitversion.calculation.merge_message import MergeMessage, try_get_semantic_version
-from pygitversion.config.provider import build
-from pygitversion.git.refname import ReferenceName
-from pygitversion.semver import SemanticVersionFormat
+from usg_pygitversion.calculation.merge_message import MergeMessage, try_get_semantic_version
+from usg_pygitversion.config.provider import build
+from usg_pygitversion.git.refname import ReferenceName
+from usg_pygitversion.semver import SemanticVersionFormat
 
 
 @pytest.mark.parametrize(

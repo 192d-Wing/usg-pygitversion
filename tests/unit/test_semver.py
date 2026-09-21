@@ -14,7 +14,7 @@ from typing import Any
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
-from pygitversion.semver import (
+from usg_pygitversion.semver import (
     BuildMetaData,
     IncrementMode,
     PreReleaseTag,
@@ -22,7 +22,7 @@ from pygitversion.semver import (
     SemanticVersionFormat,
     VersionField,
 )
-from pygitversion.semver.version import VersionParseError
+from usg_pygitversion.semver.version import VersionParseError
 
 from tests.unit.semver_cases import CASES
 

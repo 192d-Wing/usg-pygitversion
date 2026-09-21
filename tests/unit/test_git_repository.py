@@ -8,8 +8,8 @@ from datetime import UTC
 from pathlib import Path
 
 import pytest
-from pygitversion.errors import GitCommandError, RepositoryError
-from pygitversion.git import GitCommand, GitRepository
+from usg_pygitversion.errors import GitCommandError, RepositoryError
+from usg_pygitversion.git import GitCommand, GitRepository
 
 from tests.fixtures import RepositoryFixture
 
@@ -211,13 +211,13 @@ def test_command_environment_is_minimal_and_hooks_disabled(repo: RepositoryFixtu
     assert not marker.exists()
     # And the environment must not leak arbitrary variables.
     out = GitCommand(repo.path).run("var", "GIT_COMMITTER_IDENT", check=False)
-    assert "pygitversion-secret" not in out
+    assert "usg-pygitversion-secret" not in out
 
 
 def test_command_missing_git_binary(
     monkeypatch: pytest.MonkeyPatch, repo: RepositoryFixture
 ) -> None:
-    monkeypatch.setattr("pygitversion.git.command.shutil.which", lambda _name: None)
+    monkeypatch.setattr("usg_pygitversion.git.command.shutil.which", lambda _name: None)
     with pytest.raises(RepositoryError, match="git executable not found"):
         GitCommand(repo.path)
 

@@ -8,12 +8,12 @@ from collections.abc import Callable
 from pathlib import Path
 
 import pytest
-from pygitversion.buildagents.base import LocalBuild
-from pygitversion.calculation.variables import AVAILABLE_VARIABLES, GitVersionVariables
-from pygitversion.cli.arguments import Arguments, OutputType
-from pygitversion.errors import GitVersionError
-from pygitversion.output.generator import dotenv_lines, write_outputs
-from pygitversion.output.serializer import from_json, to_json
+from usg_pygitversion.buildagents.base import LocalBuild
+from usg_pygitversion.calculation.variables import AVAILABLE_VARIABLES, GitVersionVariables
+from usg_pygitversion.cli.arguments import Arguments, OutputType
+from usg_pygitversion.errors import GitVersionError
+from usg_pygitversion.output.generator import dotenv_lines, write_outputs
+from usg_pygitversion.output.serializer import from_json, to_json
 
 
 def sample() -> GitVersionVariables:

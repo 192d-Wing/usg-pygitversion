@@ -10,8 +10,8 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from pygitversion import calculate
-from pygitversion.cli.main import main
+from usg_pygitversion import calculate
+from usg_pygitversion.cli.main import main
 
 from tests.fixtures import RepositoryFixture
 from tests.scenarios.dsl import _REAL_GITVERSION
@@ -107,7 +107,7 @@ def test_logging_handlers_are_released_after_each_invocation(
     log_file = repo.path / "build.log"
     assert main(["/output", "buildserver", "/nonormalize", "/l", str(log_file)]) == 0
     assert "INFO [" in capsys.readouterr().out
-    assert logging.getLogger("pygitversion").handlers == []
+    assert logging.getLogger("usg_pygitversion").handlers == []
     assert log_file.read_text(encoding="utf-8").startswith("INFO [")
 
 

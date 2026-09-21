@@ -40,7 +40,7 @@ def _find_git() -> str:
     """Locate the git binary once at import time; the suite cannot run without it."""
     found = shutil.which("git")
     if found is None:  # pragma: no cover
-        msg = "git binary not found on PATH; pygitversion tests require git"
+        msg = "git binary not found on PATH; usg-pygitversion tests require git"
         raise RuntimeError(msg)
     return found
 
@@ -82,7 +82,7 @@ class RepositoryFixture:
                 repository; the clock continues from the source so commit
                 dates stay ordered.
         """
-        self._tmp = tempfile.TemporaryDirectory(prefix="pygitversion-test-")
+        self._tmp = tempfile.TemporaryDirectory(prefix="usg-pygitversion-test-")
         self.path = Path(self._tmp.name).resolve()
         self._clock = _EPOCH
         self._commit_count = 0

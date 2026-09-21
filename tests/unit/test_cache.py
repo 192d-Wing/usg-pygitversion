@@ -5,8 +5,8 @@ from __future__ import annotations
 
 import sys
 
-from pygitversion.cache import CacheProvider, cache_key
-from pygitversion.git import GitRepository
+from usg_pygitversion.cache import CacheProvider, cache_key
+from usg_pygitversion.git import GitRepository
 
 from tests.fixtures import RepositoryFixture
 from tests.unit.test_output import sample

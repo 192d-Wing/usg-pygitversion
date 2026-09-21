@@ -6,10 +6,10 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from pygitversion._logging import Verbosity
-from pygitversion.buildagents.envexport import Shell
-from pygitversion.cli.arguments import DEFAULT_OUTPUT_FILE_NAME, OutputType, parse_arguments
-from pygitversion.errors import UsageError
+from usg_pygitversion._logging import Verbosity
+from usg_pygitversion.buildagents.envexport import Shell
+from usg_pygitversion.cli.arguments import DEFAULT_OUTPUT_FILE_NAME, OutputType, parse_arguments
+from usg_pygitversion.errors import UsageError
 
 
 def test_empty_means_json_in_current_directory(tmp_path: Path) -> None:

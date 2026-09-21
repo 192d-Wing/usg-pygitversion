@@ -33,10 +33,10 @@ import sys
 from collections.abc import Callable, Mapping
 from typing import Any
 
-from pygitversion.calculation import calculate_variables
-from pygitversion.config import GitVersionConfiguration
-from pygitversion.config.provider import build
-from pygitversion.config.yaml_io import dump_mapping
+from usg_pygitversion.calculation import calculate_variables
+from usg_pygitversion.config import GitVersionConfiguration
+from usg_pygitversion.config.provider import build
+from usg_pygitversion.config.yaml_io import dump_mapping
 
 from tests.fixtures.repository import RepositoryFixture
 
@@ -66,7 +66,7 @@ def _find_reference_binary() -> str | None:
 
 
 _REAL_GITVERSION = _find_reference_binary()
-_DIFFERENTIAL = os.environ.get("PYGITVERSION_DIFFERENTIAL", "") not in ("", "0", "false")
+_DIFFERENTIAL = os.environ.get("USG_PYGITVERSION_DIFFERENTIAL", "") not in ("", "0", "false")
 
 
 def _hyphenate(value: Any) -> Any:

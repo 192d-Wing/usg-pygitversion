@@ -13,7 +13,7 @@ coverage.xml
 htmlcov/
 
 # Generated at build time by the version hook (see PLAN.md 8.3)
-pygitversion/_version.py
+usg_pygitversion/_version.py
 
 # Editors / OS
 .idea/

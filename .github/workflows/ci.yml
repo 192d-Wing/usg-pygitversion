@@ -97,7 +97,7 @@ jobs:
       # reference binary and compare every output variable (PLAN.md D4, D6).
       - run: uv run pytest -m "not memory" tests/scenarios tests/unit/test_app.py
         env:
-          PYGITVERSION_DIFFERENTIAL: "1"
+          USG_PYGITVERSION_DIFFERENTIAL: "1"
 
   budget:
     name: performance and memory budget (50k commits)
@@ -135,7 +135,7 @@ jobs:
           echo "SemVer=$GitVersion_SemVer FullSemVer=$GitVersion_FullSemVer"
       # The generic export must be eval-safe on the runner's shell.
       - run: |
-          eval "$(uv run python -m pygitversion --output env --prefix GV_)"
+          eval "$(uv run python -m usg_pygitversion --output env --prefix GV_)"
           test "$GV_SemVer" = "$GitVersion_SemVer"
 
   build:
@@ -190,5 +190,5 @@ jobs:
           "$VENV_BIN/python" -m pip install --no-deps --only-binary=:all: dist/*.whl
           "$VENV_BIN/python" -m pip install dist/*.whl
           "$VENV_BIN/gitversion" /version
-          "$VENV_BIN/pygitversion" --version
-          "$VENV_BIN/python" -m pygitversion /version
+          "$VENV_BIN/usg-pygitversion" --version
+          "$VENV_BIN/python" -m usg_pygitversion /version

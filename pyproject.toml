@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
 # ---------------------------------------------------------------------------
-# pygitversion: a pure-Python port of GitVersion (https://gitversion.net).
+# usg-pygitversion: a pure-Python port of GitVersion (https://gitversion.net).
 #
 # Build and tooling configuration. See PLAN.md sections 8 and 9 for the
 # rationale behind each setting. Security-relevant choices are marked with
@@ -8,12 +8,12 @@
 # ---------------------------------------------------------------------------
 
 [build-system]
-# PyYAML is needed at build time because the version hook runs pygitversion itself.
+# PyYAML is needed at build time because the version hook runs usg-pygitversion itself.
 requires = ["hatchling>=1.32.3", "pyyaml>=6.0"]
 build-backend = "hatchling.build"
 
 [project]
-name = "pygitversion"
+name = "usg-pygitversion"
 description = "Semantic versioning from git history: a Python port of GitVersion, no .NET required."
 readme = "README.md"
 license = "MIT"
@@ -41,17 +41,17 @@ dependencies = ["PyYAML>=6.0.2"]
 dynamic = ["version"]
 
 [project.urls]
-Homepage = "https://github.com/jwillman/pygitversion"
-Documentation = "https://github.com/jwillman/pygitversion#readme"
-Changelog = "https://github.com/jwillman/pygitversion/releases"
-Issues = "https://github.com/jwillman/pygitversion/issues"
+Homepage = "https://github.com/192d-Wing/usg-pygitversion"
+Documentation = "https://github.com/192d-Wing/usg-pygitversion#readme"
+Changelog = "https://github.com/192d-Wing/usg-pygitversion/releases"
+Issues = "https://github.com/192d-Wing/usg-pygitversion/issues"
 "Upstream (GitVersion)" = "https://gitversion.net/docs/"
 
 [project.scripts]
 # Both names are installed: `gitversion` for drop-in compatibility with the
-# .NET tool, `pygitversion` to disambiguate when both are present.
-gitversion = "pygitversion.cli.main:main"
-pygitversion = "pygitversion.cli.main:main"
+# .NET tool, `usg-pygitversion` to disambiguate when both are present.
+gitversion = "usg_pygitversion.cli.main:main"
+usg-pygitversion = "usg_pygitversion.cli.main:main"
 
 [dependency-groups]
 dev = [
@@ -76,13 +76,21 @@ path = "hatch_build.py"
 expression = "resolve_version()"
 
 [tool.hatch.build.hooks.custom]
-# Writes pygitversion/_version.py into every build (hatch_build.py).
+# Writes usg_pygitversion/_version.py into every build (hatch_build.py).
 
 [tool.hatch.build.targets.sdist]
-include = ["pygitversion/", "tests/", "docs/", "PLAN.md", "README.md", "LICENSE", "SECURITY.md"]
+include = [
+  "usg_pygitversion/",
+  "tests/",
+  "docs/",
+  "PLAN.md",
+  "README.md",
+  "LICENSE",
+  "SECURITY.md",
+]
 
 [tool.hatch.build.targets.wheel]
-packages = ["pygitversion"]
+packages = ["usg_pygitversion"]
 
 # ---------------------------------------------------------------------------
 # ruff: lint + format. Rule families and the controls they evidence:
@@ -95,21 +103,43 @@ packages = ["pygitversion"]
 [tool.ruff]
 target-version = "py311"
 line-length = 100
-src = ["pygitversion", "tests"]
+src = ["usg_pygitversion", "tests"]
 # Markdown code fences are prose examples, not formatted source.
 extend-exclude = ["*.md"]
 
 [tool.ruff.lint]
 select = [
-  "E", "W", "F", "I", "N", "UP", "B", "A", "C4", "SIM", "RET", "ARG", "PTH",
-  "PL", "RUF", "S", "D", "T20", "ERA", "ISC", "PIE", "TID", "PERF", "FURB",
+  "E",
+  "W",
+  "F",
+  "I",
+  "N",
+  "UP",
+  "B",
+  "A",
+  "C4",
+  "SIM",
+  "RET",
+  "ARG",
+  "PTH",
+  "PL",
+  "RUF",
+  "S",
+  "D",
+  "T20",
+  "ERA",
+  "ISC",
+  "PIE",
+  "TID",
+  "PERF",
+  "FURB",
 ]
 ignore = [
-  "D203",   # one-blank-line-before-class (conflicts with D211)
-  "D213",   # multi-line-summary-second-line (conflicts with D212)
-  "PLR0913",# too many arguments: ported upstream signatures are what they are
-  "PLR0917",# too many positional arguments: same reason
-  "ISC001", # conflicts with the formatter
+  "D203",    # one-blank-line-before-class (conflicts with D211)
+  "D213",    # multi-line-summary-second-line (conflicts with D212)
+  "PLR0913", # too many arguments: ported upstream signatures are what they are
+  "PLR0917", # too many positional arguments: same reason
+  "ISC001",  # conflicts with the formatter
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -126,7 +156,7 @@ convention = "google"
 
 [tool.ruff.lint.flake8-bandit]
 # S603/S607 fire on every subprocess call. The single sanctioned call site is
-# pygitversion/git/command.py, which carries an inline `# noqa` with a
+# usg_pygitversion/git/command.py, which carries an inline `# noqa` with a
 # justification. Everywhere else the rule stays on.
 check-typed-exception = true
 
@@ -145,7 +175,7 @@ warn_return_any = true
 disallow_any_unimported = true
 no_implicit_reexport = true
 show_error_codes = true
-files = ["pygitversion", "tests"]
+files = ["usg_pygitversion", "tests"]
 
 # ---------------------------------------------------------------------------
 # pytest: ResourceWarning is an error (PLAN.md 9.4) so an unclosed file or
@@ -164,7 +194,7 @@ markers = [
 
 [tool.coverage.run]
 branch = true
-source = ["pygitversion"]
+source = ["usg_pygitversion"]
 
 [tool.coverage.report]
 fail_under = 90

@@ -1,5 +1,5 @@
 <!-- SPDX-License-Identifier: MIT -->
-# pygitversion: Plan for a Python port of GitVersion
+# usg-pygitversion: Plan for a Python port of GitVersion
 
 Status: APPROVED (rev 7: engineering standards section added (docs, NIST 800-53 Rev5, security, memory); all questions resolved; PyPI-only distribution confirmed; PyPI wheel publishing in CI/CD; GitHub+GitLab agents, generic env export + Python API; Python 3.11 floor, git binary backend, local gitversion 6.8.2 available for differential tests)
 Target of the port: GitVersion 6.8.2 (latest release, 2026-07-10), https://gitversion.net/docs/
@@ -103,7 +103,7 @@ and in CI via the `gittools/gitversion:6.8.2` Docker image. CommitDate uses .NET
 
 ### D7. CLI surface
 Accept GitVersion's `/flag` style **and** POSIX `--flag` style. Console
-script is installed as both `gitversion` and `pygitversion`. Exit codes
+script is installed as both `gitversion` and `usg-pygitversion`. Exit codes
 match upstream (0 ok, 1 error).
 
 ---
@@ -111,7 +111,7 @@ match upstream (0 ok, 1 error).
 ## 3. Proposed package layout
 
 ```
-pygitversion/
+usg_pygitversion/
   __init__.py, __main__.py, _version.py
   cli/            argparse front-end, /flag translation, verbosity, exit codes
   git/            GitRepository abstraction; subprocess backend; models
@@ -155,7 +155,7 @@ Each phase ends in a green test run and a tagged pre-release.
 - `SECURITY.md`, `CONTRIBUTING.md`, PR template with the section 9.5
   checklist, and the initial `docs/security/nist-800-53-mapping.md`.
 - `release.yml` with PyPI Trusted Publishing wired end to end (section 8);
-  reserve the `pygitversion` name on PyPI and TestPyPI; publish `0.0.1` to
+  reserve the `usg-pygitversion` name on PyPI and TestPyPI; publish `0.0.1` to
   prove the pipeline before any real code exists.
 - `RepositoryFixture` test DSL. This lands first because every later phase
   is verified with it.
@@ -303,7 +303,7 @@ key `update-build-number`, not a CLI flag.
 | AppVeyor, Bitbucket Pipelines, CodeBuild, Drone, Travis, MyGet, ContinuaCI, Space, EnvRun | each ~30 lines | per agent | per agent | per agent |
 
 ### 7.3 Port plan
-- `pygitversion/buildagents/base.py`: `BuildAgent` ABC mirroring the five
+- `usg_pygitversion/buildagents/base.py`: `BuildAgent` ABC mirroring the five
   hooks, `LocalBuild`, and `resolve(env) -> BuildAgent` with the
   last-match-wins rule and non-fatal detection.
 - One module per agent. **Tier 1 (v1, fully tested):** GitHub Actions and
@@ -334,7 +334,7 @@ key `update-build-number`, not a CLI flag.
 - For 7.5: tests that `export_env` populates a mapping, that the `env`
   output is `eval`-safe for shell metacharacters in branch names, that the
   `--env-file` output round-trips through `python-dotenv`-style parsing, and
-  a `python -m pygitversion` invocation test.
+  a `python -m usg_pygitversion` invocation test.
 
 ### 7.5 Generic environment export for unlisted build servers
 
@@ -349,11 +349,11 @@ variable set as the built-in agents:
 
    ```python
    import os
-   import pygitversion
+   import usg_pygitversion
 
-   version = pygitversion.calculate(".")          # -> GitVersionVariables
-   pygitversion.export_env(version, os.environ)   # sets GitVersion_* in-process
-   pygitversion.export_env(version, env, prefix="MYAPP_")   # any MutableMapping
+   version = usg_pygitversion.calculate(".")          # -> GitVersionVariables
+   usg_pygitversion.export_env(version, os.environ)   # sets GitVersion_* in-process
+   usg_pygitversion.export_env(version, env, prefix="MYAPP_")   # any MutableMapping
    version.as_dict()                              # same keys/values as JSON output
    version.full_sem_ver                           # typed attribute access
    ```
@@ -363,13 +363,13 @@ variable set as the built-in agents:
    the primary answer for "non-listed build servers".
 
 2. **Module entry point with shell-evaluable output**, for shell-based
-   pipelines (`python -m pygitversion` works even when the `gitversion`
+   pipelines (`python -m usg_pygitversion` works even when the `gitversion`
    console script is not on `PATH`, e.g. inside a `uv run` or a venv):
 
    ```sh
-   eval "$(python -m pygitversion --output env)"          # POSIX sh/bash/zsh
-   python -m pygitversion --output env --shell powershell | Invoke-Expression
-   python -m pygitversion --output env --shell cmd > gv.bat && call gv.bat
+   eval "$(python -m usg_pygitversion --output env)"          # POSIX sh/bash/zsh
+   python -m usg_pygitversion --output env --shell powershell | Invoke-Expression
+   python -m usg_pygitversion --output env --shell cmd > gv.bat && call gv.bat
    ```
 
    `--output env` prints one `export GitVersion_<Name>='<value>'` line per
@@ -379,8 +379,8 @@ variable set as the built-in agents:
 3. **File-based export**, for servers that source a file between steps:
 
    ```sh
-   python -m pygitversion --output dotenv --outputfile gitversion.env
-   python -m pygitversion --env-file "$SOME_CI_ENV_FILE"   # append, GitHub-style
+   python -m usg_pygitversion --output dotenv --outputfile gitversion.env
+   python -m usg_pygitversion --env-file "$SOME_CI_ENV_FILE"   # append, GitHub-style
    ```
 
    `dotenv` is upstream's existing format (`GitVersion_<Name>=<value>` per
@@ -393,7 +393,7 @@ Implementation notes:
   naming, prefix handling, empty-value skipping (matching GitHub Actions
   behaviour), and per-shell quoting. Built-in agents that write env lines
   (GitHub Actions, GitLab, Jenkins) reuse it, so formats can't drift.
-- The public API is `pygitversion.calculate`, `pygitversion.export_env`,
+- The public API is `usg_pygitversion.calculate`, `usg_pygitversion.export_env`,
   and the `GitVersionVariables` dataclass. It is the supported programmatic
   surface and is covered by the compatibility promise; everything else in
   the package is private.
@@ -419,7 +419,7 @@ ci.yml        on push / pull_request
               gitversion 6.8.2 (installed via `dotnet tool install`)
   build       uv build  ->  dist/*.whl + dist/*.tar.gz, uploaded as artifact
   smoke       installs the built wheel into a clean venv on each OS and runs
-              `gitversion /version`, `python -m pygitversion --output env`
+              `gitversion /version`, `python -m usg_pygitversion --output env`
               on the checked-out repo, and the GitHub Actions env-export
               smoke (asserts GitVersion_SemVer visible in a later step)
 
@@ -436,7 +436,7 @@ release.yml   on push of tag v*  (also workflow_dispatch for reruns)
 ### 8.2 Publishing mechanics
 - **Trusted Publishing (OIDC), no API tokens.** The `pypi` and `testpypi`
   environments on GitHub are registered as trusted publishers on pypi.org
-  and test.pypi.org for the `pygitversion` project. The job has
+  and test.pypi.org for the `usg-pygitversion` project. The job has
   `permissions: id-token: write` and uses `pypa/gh-action-pypi-publish`.
   No secrets are stored in the repo.
 - **Environment protection.** The `pypi` environment requires a reviewer
@@ -445,7 +445,7 @@ release.yml   on push of tag v*  (also workflow_dispatch for reruns)
   published. The package is pure Python, so one wheel covers every OS.
 - **Attestations.** `pypa/gh-action-pypi-publish` generates PEP 740
   attestations by default; we keep that on.
-- **Name reservation.** Claim `pygitversion` on PyPI and TestPyPI in Phase
+- **Name reservation.** Claim `usg-pygitversion` on PyPI and TestPyPI in Phase
   0 with a `0.0.1` placeholder so the trusted-publisher config can be
   created against a real project. PyPI is the only distribution target;
   no internal index.
@@ -453,9 +453,9 @@ release.yml   on push of tag v*  (also workflow_dispatch for reruns)
 ### 8.3 Versioning the package itself
 The tool dogfoods itself. `hatch-vcs` is *not* used because it would give
 us setuptools-scm semantics rather than GitVersion semantics. Instead:
-- A tiny hatch build hook runs `python -m pygitversion --showvariable
+- A tiny hatch build hook runs `python -m usg_pygitversion --showvariable
   SemVer` (from the source tree, no install needed) and writes
-  `pygitversion/_version.py`. PEP 440 normalisation maps GitVersion output
+  `usg_pygitversion/_version.py`. PEP 440 normalisation maps GitVersion output
   to a legal Python version: `1.2.0-beta.3` -> `1.2.0b3`,
   `1.2.0-alpha.5` -> `1.2.0a5`, `1.2.0-feature-x.4` -> `1.2.0.dev4`,
   `1.2.0-PullRequest12.1` -> `1.2.0.dev1`. The mapping is a documented
@@ -469,10 +469,10 @@ us setuptools-scm semantics rather than GitVersion semantics. Instead:
 
 ### 8.4 Install story for the dev machines
 ```sh
-uv tool install pygitversion          # or: pipx install pygitversion
+uv tool install usg-pygitversion      # or: pipx install usg-pygitversion
 gitversion                            # console script
-python -m pygitversion                # module form, inside any venv
-uv add --dev pygitversion             # as a project dev dependency
+python -m usg_pygitversion                # module form, inside any venv
+uv add --dev usg-pygitversion         # as a project dev dependency
 ```
 Requires Python >= 3.11 and a `git` binary on `PATH`; nothing else.
 
@@ -500,11 +500,11 @@ checklist otherwise.
 800-53 is an organisational control catalogue; most controls are satisfied
 by the environment the tool runs in, not by the tool. The table lists the
 controls a CLI/library can implement or provide evidence for, and how
-pygitversion does so. `docs/security/nist-800-53-mapping.md` will carry this
+usg-pygitversion does so. `docs/security/nist-800-53-mapping.md` will carry this
 table with per-control evidence links (file, test, CI job) and is kept
 current as part of the definition of done for each phase.
 
-| Control | Requirement | How pygitversion satisfies it |
+| Control | Requirement | How usg-pygitversion satisfies it |
 |---------|-------------|-------------------------------|
 | **SI-10** Information Input Validation | Validate all inputs | CLI args parsed by argparse with typed choices; `GitVersion.yml` validated against a typed schema with allow-listed keys and enum values, unknown keys rejected with a precise error; regex from config compiled through the .NET shim with a length cap and a per-match timeout; git output parsed with strict formats (`%x00` delimiters), never split on whitespace heuristically; branch/tag names validated with `git check-ref-format` rules before use. |
 | **SI-11** Error Handling | Fail securely, no sensitive data in errors | All exceptions are typed (`errors.py`), messages never include environment contents or file contents; tracebacks only with `/verbosity diagnostic`; exit codes are deterministic. |

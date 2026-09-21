@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import pytest
-from pygitversion.git import ReferenceName
+from usg_pygitversion.git import ReferenceName
 
 
 @pytest.mark.parametrize(

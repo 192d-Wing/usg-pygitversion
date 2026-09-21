@@ -11,19 +11,19 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from pygitversion.config import (
+from usg_pygitversion.config import (
     DeploymentMode,
     GitVersionConfiguration,
     IncrementStrategy,
     VersionStrategy,
     provide,
 )
-from pygitversion.config.locator import find_configuration_file, verify_unambiguous
-from pygitversion.config.override import SUPPORTED_KEYS, parse_override_options
-from pygitversion.config.provider import build
-from pygitversion.config.workflows import KNOWN_WORKFLOWS, load_preset
-from pygitversion.config.yaml_io import dump_mapping, load_mapping
-from pygitversion.errors import ConfigurationError, UsageError
+from usg_pygitversion.config.locator import find_configuration_file, verify_unambiguous
+from usg_pygitversion.config.override import SUPPORTED_KEYS, parse_override_options
+from usg_pygitversion.config.provider import build
+from usg_pygitversion.config.workflows import KNOWN_WORKFLOWS, load_preset
+from usg_pygitversion.config.yaml_io import dump_mapping, load_mapping
+from usg_pygitversion.errors import ConfigurationError, UsageError
 
 _ORACLE = Path(__file__).with_name("showconfig-default-6.8.2.yml")
 

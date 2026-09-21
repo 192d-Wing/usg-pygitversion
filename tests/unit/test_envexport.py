@@ -9,9 +9,9 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from pygitversion import export_env
-from pygitversion.buildagents.envexport import EnvExporter, Shell
-from pygitversion.errors import GitVersionError
+from usg_pygitversion import export_env
+from usg_pygitversion.buildagents.envexport import EnvExporter, Shell
+from usg_pygitversion.errors import GitVersionError
 
 from tests.unit.test_output import sample
 

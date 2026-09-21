@@ -4,14 +4,14 @@
 from __future__ import annotations
 
 import pytest
-from pygitversion.calculation.increment import IncrementStrategyFinder
-from pygitversion.calculation.mainline import consolidate
-from pygitversion.calculation.store import RepositoryStore
-from pygitversion.calculation.tagged_versions import TaggedSemanticVersionRepository
-from pygitversion.config.schema import IgnoreConfiguration
-from pygitversion.errors import GitVersionError
-from pygitversion.git import GitRepository
-from pygitversion.semver import VersionField
+from usg_pygitversion.calculation.increment import IncrementStrategyFinder
+from usg_pygitversion.calculation.mainline import consolidate
+from usg_pygitversion.calculation.store import RepositoryStore
+from usg_pygitversion.calculation.tagged_versions import TaggedSemanticVersionRepository
+from usg_pygitversion.config.schema import IgnoreConfiguration
+from usg_pygitversion.errors import GitVersionError
+from usg_pygitversion.git import GitRepository
+from usg_pygitversion.semver import VersionField
 
 from tests.fixtures import RepositoryFixture
 

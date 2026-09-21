@@ -7,8 +7,8 @@ import subprocess
 import sys
 
 import pytest
-from pygitversion import __version__
-from pygitversion.cli.main import main
+from usg_pygitversion import __version__
+from usg_pygitversion.cli.main import main
 
 
 def test_version_flag_prints_version(capsys: pytest.CaptureFixture[str]) -> None:
@@ -41,7 +41,7 @@ def test_not_a_repository_fails_cleanly(
 
 def test_module_entry_point() -> None:
     result = subprocess.run(
-        [sys.executable, "-m", "pygitversion", "/version"],
+        [sys.executable, "-m", "usg_pygitversion", "/version"],
         capture_output=True,
         text=True,
         check=False,

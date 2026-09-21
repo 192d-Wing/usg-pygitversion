@@ -6,7 +6,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 import pytest
-from pygitversion.config import GitVersionConfiguration
+from usg_pygitversion.config import GitVersionConfiguration
 
 from tests.scenarios.dsl import Scenario, githubflow
 

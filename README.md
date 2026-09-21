@@ -1,5 +1,5 @@
 <!-- SPDX-License-Identifier: MIT -->
-# pygitversion
+# usg-pygitversion
 
 Semantic versioning from git history, without .NET. A pure-Python port of
 [GitVersion](https://gitversion.net) 6.8.2.
@@ -21,13 +21,15 @@ scripts keep working.
 ## Install
 
 ```sh
-uv tool install pygitversion       # or: pipx install pygitversion
+uv tool install usg-pygitversion   # or: pipx install usg-pygitversion
 ```
 
 Requires Python 3.11+ and a `git` binary on `PATH`; nothing else. In a
-project that already uses `uv`, `uv add --dev pygitversion` and then
+project that already uses `uv`, `uv add --dev usg-pygitversion` and then
 `uv run gitversion` also works. Until the first PyPI release, install from
-a checkout with `uv tool install /path/to/pygitversion`.
+a checkout with `uv tool install /path/to/usg-pygitversion`.
+The import package is `usg_pygitversion`; both `gitversion` (drop-in for the
+.NET tool) and `usg-pygitversion` commands are installed.
 
 ## Use
 
@@ -47,10 +49,10 @@ For build servers without a dedicated agent, export the variables into
 the environment of a shell or a file:
 
 ```sh
-eval "$(python -m pygitversion --output env)"                       # sh/bash/zsh
-python -m pygitversion --output env --shell powershell | Invoke-Expression
-python -m pygitversion --output env --shell cmd > gv.bat && call gv.bat
-python -m pygitversion --env-file "$SOME_CI_ENV_FILE"               # append KEY=value
+eval "$(python -m usg_pygitversion --output env)"                   # sh/bash/zsh
+python -m usg_pygitversion --output env --shell powershell | Invoke-Expression
+python -m usg_pygitversion --output env --shell cmd > gv.bat && call gv.bat
+python -m usg_pygitversion --env-file "$SOME_CI_ENV_FILE"           # append KEY=value
 ```
 
 Values are quoted for the chosen shell, so branch names cannot inject
@@ -60,10 +62,10 @@ commands. `--prefix` changes the `GitVersion_` prefix. Run
 From Python, in a build script:
 
 ```python
-import os, pygitversion
+import os, usg_pygitversion
 
-v = pygitversion.calculate(".")
-pygitversion.export_env(v, os.environ)   # GitVersion_* now visible to subprocesses
+v = usg_pygitversion.calculate(".")
+usg_pygitversion.export_env(v, os.environ)   # GitVersion_* now visible to subprocesses
 print(v.full_sem_ver)
 ```
 

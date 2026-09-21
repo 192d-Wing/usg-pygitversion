@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-from pygitversion.config.schema import GitVersionConfiguration
+from usg_pygitversion.config.schema import GitVersionConfiguration
 
 from tests.scenarios.dsl import RemoteScenario, Scenario, gitflow
 from tests.scenarios.test_version_bumping_scenarios import CONVENTIONAL_COMMIT_PATTERNS

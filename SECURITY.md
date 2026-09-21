@@ -15,7 +15,7 @@ days and a remediation plan or a request for more information within ten.
 
 ## What is in scope
 
-pygitversion is a command-line tool and library that reads a local git
+usg-pygitversion is a command-line tool and library that reads a local git
 repository and prints version variables. Relevant issue classes include:
 
 - Code execution or file access outside the repository triggered by
@@ -31,7 +31,7 @@ release workflow through Trusted Publishing. Verify with:
 
 ```sh
 pip install pypi-attestations
-pypi-attestations verify pypi --repository https://github.com/jwillman/pygitversion pypi:pygitversion-<version>-py3-none-any.whl
+pypi-attestations verify pypi --repository https://github.com/192d-Wing/usg-pygitversion pypi:usg_pygitversion-<version>-py3-none-any.whl
 ```
 
 Each GitHub release also attaches a CycloneDX SBOM and a `SHA256SUMS` file.

@@ -11,7 +11,7 @@ from tests.fixtures import RepositoryFixture
 from tests.scenarios.dsl import _REAL_GITVERSION
 
 # Variables that make the tool believe it runs on a build server (see
-# pygitversion.buildagents). They are present on every GitHub Actions and
+# usg_pygitversion.buildagents). They are present on every GitHub Actions and
 # GitLab runner, and build-server mode requires exactly one remote, which
 # the throwaway test repositories never have. Tests that need an agent set
 # these explicitly with ``monkeypatch``.

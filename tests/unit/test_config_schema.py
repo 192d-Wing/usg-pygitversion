@@ -7,7 +7,7 @@ import logging
 from datetime import UTC, datetime
 
 import pytest
-from pygitversion.config import (
+from usg_pygitversion.config import (
     BranchConfiguration,
     DeploymentMode,
     GitVersionConfiguration,
@@ -16,8 +16,8 @@ from pygitversion.config import (
     PreventIncrementConfiguration,
     VersionStrategy,
 )
-from pygitversion.config.schema import BRANCH_FIELDS, ROOT_FIELDS
-from pygitversion.errors import ConfigurationError
+from usg_pygitversion.config.schema import BRANCH_FIELDS, ROOT_FIELDS
+from usg_pygitversion.errors import ConfigurationError
 
 
 def test_field_tables_cover_upstream_declaration_order() -> None:
@@ -61,7 +61,7 @@ def test_rejections_name_the_key(doc: dict[str, object], message: str) -> None:
 
 
 def test_unknown_keys_are_ignored_with_a_warning(caplog: pytest.LogCaptureFixture) -> None:
-    with caplog.at_level(logging.WARNING, logger="pygitversion.config"):
+    with caplog.at_level(logging.WARNING, logger="usg_pygitversion.config"):
         cfg = GitVersionConfiguration.from_mapping({"foo": 1, "branches": {"main": {"bar": 2}}})
     assert cfg.branches["main"] == BranchConfiguration()
     assert "ignoring unknown configuration key 'foo'" in caplog.text

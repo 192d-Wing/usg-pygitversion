@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import pytest
-from pygitversion._pep440 import to_pep440
+from usg_pygitversion._pep440 import to_pep440
 
 
 @pytest.mark.parametrize(

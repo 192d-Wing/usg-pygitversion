@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from pygitversion.buildagents import GitHubActions, GitLabCi, LocalBuild, resolve
+from usg_pygitversion.buildagents import GitHubActions, GitLabCi, LocalBuild, resolve
 
 from tests.unit.test_output import sample
 
