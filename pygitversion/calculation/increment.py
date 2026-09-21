@@ -9,8 +9,9 @@ from pygitversion.calculation.store import RepositoryStore
 from pygitversion.calculation.tagged_versions import TaggedSemanticVersionRepository
 from pygitversion.config.effective import EffectiveConfiguration
 from pygitversion.config.enums import CommitMessageIncrementMode, IncrementStrategy
+from pygitversion.config.schema import IgnoreConfiguration
 from pygitversion.dotnet import regex as dotnet_regex
-from pygitversion.errors import ConfigurationError
+from pygitversion.errors import ConfigurationError, GitVersionError
 from pygitversion.git.models import Commit
 from pygitversion.semver import VersionField
 
@@ -43,6 +44,7 @@ class IncrementStrategyFinder:
         self.store = store
         self.tags = tags
         self._commit_increment_cache: dict[str, VersionField | None] = {}
+        self._head_commits_cache: dict[str, list[Commit]] = {}
 
     def determine_incremented_field(
         self,
@@ -72,6 +74,49 @@ class IncrementStrategyFinder:
         )
 
     # -- internals -------------------------------------------------------------
+
+    def get_merged_commits(
+        self, merge_commit: Commit, index: int, ignore: IgnoreConfiguration
+    ) -> list[Commit]:
+        """Ports ``GetMergedCommits``: commits brought in by one side of a merge, oldest first.
+
+        ``index`` 1 selects the merged (second-parent) side, 0 the first-parent
+        side. Only two-parent merges are supported, as upstream.
+
+        Raises:
+            GitVersionError: For an octopus merge or a non-merge commit.
+        """
+        if not merge_commit.is_merge:
+            raise GitVersionError("The parameter is not a merge commit.")
+        if len(merge_commit.parents) > 2:  # noqa: PLR2004 -- two parents, as upstream
+            raise GitVersionError(
+                "GitVersion does not support more than one merge source in a single commit yet"
+            )
+        base = self.store.commit(merge_commit.parents[0])
+        merged = self.store.commit(merge_commit.parents[1])
+        if index == 0:
+            base, merged = merged, base
+        merge_base = self.store.find_merge_base_commits(base, merged)
+        if merge_base is None:
+            raise GitVersionError("Cannot find the base commit of merged branch.")
+        return self._intermediate_commits(merge_base, merged, ignore)
+
+    def _intermediate_commits(
+        self, base: Commit, head: Commit, ignore: IgnoreConfiguration
+    ) -> list[Commit]:
+        """Ports ``GetIntermediateCommits``: head history after ``base`` (oldest first)."""
+        head_commits = self._head_commits(head, ignore)
+        for position, commit in enumerate(head_commits):
+            if commit.sha == base.sha:
+                return head_commits[position + 1 :]
+        return []
+
+    def _head_commits(self, head: Commit, ignore: IgnoreConfiguration) -> list[Commit]:
+        cached = self._head_commits_cache.get(head.sha)
+        if cached is None:
+            cached = self.store.commits_reachable_from_head(head, ignore)
+            self._head_commits_cache[head.sha] = cached
+        return cached
 
     @staticmethod
     def _regexes(configuration: EffectiveConfiguration) -> tuple[re.Pattern[str], ...]:

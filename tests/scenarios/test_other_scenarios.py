@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 """Port of upstream ``IntegrationTests/OtherScenarios.cs`` (6.8.2).
 
-Remote-repository cases land with Phase 5; Mainline cases with Phase 4.
+Remote-repository cases land with Phase 5.
 """
 
 from __future__ import annotations
@@ -491,9 +491,24 @@ def test_ensure_version_after_main_is_merged_back_to_develop_is_correct() -> Non
         f.assert_full_semver("1.1.0-alpha.3")
 
 
-@pytest.mark.skip(reason="Mainline strategy lands in Phase 4")
-def test_ensure_version_after_main_is_merged_back_to_develop_is_correct_for_mainline() -> None:
-    pass
+@pytest.mark.parametrize("apply_tag", [False, True])
+def test_ensure_version_after_main_is_merged_back_to_develop_is_correct_for_mainline(
+    apply_tag: bool,
+) -> None:
+    c = gitflow(strategies=["Mainline"])
+    with Scenario() as f:
+        f.make_a_commit("A")
+        f.apply_tag("1.0.0")
+        f.branch_to("develop")
+        f.make_a_commit("B +semver: major")
+        f.assert_full_semver("2.0.0-alpha.1", c)
+        f.checkout("main")
+        f.make_a_commit("C")
+        if apply_tag:
+            f.apply_tag("1.0.1")
+        f.checkout("develop")
+        f.merge_no_ff("main")
+        f.assert_full_semver("2.0.0-alpha.2", c)
 
 
 @pytest.mark.parametrize(

@@ -105,6 +105,13 @@ def githubflow(
     return configure("GitHubFlow/v1", branches, **root)
 
 
+def trunkbased(
+    branches: Mapping[str, Mapping[str, Any]] | None = None, **root: Any
+) -> GitVersionConfiguration:
+    """``TrunkBasedConfigurationBuilder.New`` plus overrides."""
+    return configure("TrunkBased/preview1", branches, **root)
+
+
 def _norm(value: object) -> str:
     """Unify None and "" (the reference JSON writer emits null for empty strings)."""
     return "" if value is None else str(value)

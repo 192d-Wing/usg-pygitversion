@@ -20,6 +20,7 @@ from pygitversion.calculation.base_version import (
 )
 from pygitversion.calculation.context import GitVersionContext
 from pygitversion.calculation.increment import IncrementStrategyFinder
+from pygitversion.calculation.mainline import MainlineStrategy
 from pygitversion.calculation.merge_message import MergeMessage, try_get_semantic_version
 from pygitversion.calculation.store import RepositoryStore
 from pygitversion.calculation.tagged_versions import (
@@ -390,10 +391,11 @@ class TrackReleaseBranchesStrategy:
 
 
 def default_strategies(services: Services) -> list[Strategy]:
-    """All strategies in upstream registration order (Mainline lands in Phase 4)."""
+    """All strategies in upstream registration order (source-file order)."""
     return [
         ConfiguredNextVersionStrategy(services),
         FallbackStrategy(services),
+        MainlineStrategy(services.context, services.store, services.tags, services.increments),
         MergeMessageStrategy(services),
         TaggedCommitStrategy(services),
         TrackReleaseBranchesStrategy(services),

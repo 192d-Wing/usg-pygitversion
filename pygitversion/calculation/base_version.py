@@ -97,6 +97,12 @@ class BaseVersion:
             )
         return result
 
+    def apply(self, operator: BaseVersionOperator) -> BaseVersion:
+        """Ports ``Apply``: the incremented version becomes the operand of a new operator."""
+        return BaseVersion.of(
+            self.source, self.get_incremented_version(), self.base_version_source, operator
+        )
+
     def __str__(self) -> str:
         """Log line matching upstream ``ToString``."""
         commit_source = (

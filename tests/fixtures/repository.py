@@ -194,6 +194,12 @@ class RepositoryFixture:
         self.git("commit", "--quiet", "-m", message or f"Commit {self._commit_count}")
         return self.head_sha
 
+    def amend_head_message(self, suffix: str) -> str:
+        """Append ``suffix`` to the ``HEAD`` commit message (``AmendPreviousCommit``)."""
+        message = self.git("log", "-1", "--format=%B").rstrip("\n")
+        self.git("commit", "--quiet", "--amend", "-m", message + suffix)
+        return self.head_sha
+
     def make_commits(self, count: int) -> list[str]:
         """Create ``count`` commits and return their SHAs in order."""
         return [self.make_a_commit() for _ in range(count)]

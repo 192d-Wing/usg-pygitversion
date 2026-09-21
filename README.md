@@ -4,11 +4,11 @@
 Semantic versioning from git history, without .NET. A pure-Python port of
 [GitVersion](https://gitversion.net) 6.8.2.
 
-> **Status:** Phases 0-3 complete: the calculation engine for the GitFlow
-> and GitHubFlow workflows is ported and verified against the reference
-> 6.8.2 binary on 400+ upstream scenarios. The Mainline (trunk-based)
-> strategy lands in Phase 4 and the CLI, outputs and build agents in
-> Phase 5; see `PLAN.md` for the roadmap and every design decision.
+> **Status:** Phases 0-4 complete: the calculation engine for the GitFlow,
+> GitHubFlow and TrunkBased (Mainline) workflows is ported and verified
+> against the reference 6.8.2 binary on 500+ upstream scenarios. The CLI,
+> outputs and build agents land in Phase 5; see `PLAN.md` for the roadmap
+> and every design decision.
 
 ## Why
 
