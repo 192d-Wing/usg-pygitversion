@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import sys
+
 from pygitversion.cache import CacheProvider, cache_key
 from pygitversion.git import GitRepository
 
@@ -30,7 +32,10 @@ def test_round_trip_and_corrupt_file_is_removed(repo: RepositoryFixture) -> None
     assert provider.load(key) is None
     provider.save(key, sample())
     path = provider.path_for(key)
-    assert oct(path.stat().st_mode & 0o777) == oct(0o600)
+    if sys.platform != "win32":
+        # Windows honours only the read-only bit of the creation mode and
+        # reports 0o666; owner-only access there comes from the profile ACL.
+        assert oct(path.stat().st_mode & 0o777) == oct(0o600)
     loaded = provider.load(key)
     assert loaded is not None and loaded["FullSemVer"] == "1.2.4-1"
     path.write_text("{not json")

@@ -120,3 +120,18 @@ def configure(
         logger.addHandler(file_handler)
 
     return logger
+
+
+def shutdown() -> None:
+    """Flush, close and detach every handler :func:`configure` installed.
+
+    Called when an invocation ends so that a log file descriptor is not
+    left open and a handler bound to the stdout of one invocation is not
+    reused by the next (in-process callers such as the tests would
+    otherwise write to a closed stream).
+    """
+    logger = logging.getLogger(LOGGER_NAME)
+    for handler in list(logger.handlers):
+        logger.removeHandler(handler)
+        handler.flush()
+        handler.close()

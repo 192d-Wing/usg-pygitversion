@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import subprocess
 from pathlib import Path
@@ -90,6 +91,24 @@ def test_buildserver_gitlab_writes_properties(
     assert "Set Build Number for 'GitLabCi'." in out
     assert "INFO [" in out  # buildserver output mirrors the log to stdout, as upstream
     assert (repo.path / "gitversion.properties").is_file()
+
+
+def test_logging_handlers_are_released_after_each_invocation(
+    repo: RepositoryFixture, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A console handler bound to one invocation's stdout must not outlive it.
+
+    Otherwise the next in-process log record is written to a stream that
+    the caller (here, pytest's capture) has already closed.
+    """
+    _prepare(repo)
+    monkeypatch.setenv("GITLAB_CI", "true")
+    monkeypatch.chdir(repo.path)
+    log_file = repo.path / "build.log"
+    assert main(["/output", "buildserver", "/nonormalize", "/l", str(log_file)]) == 0
+    assert "INFO [" in capsys.readouterr().out
+    assert logging.getLogger("pygitversion").handlers == []
+    assert log_file.read_text(encoding="utf-8").startswith("INFO [")
 
 
 def test_buildserver_requires_one_remote(

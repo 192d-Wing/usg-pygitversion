@@ -57,7 +57,15 @@ def run(
         else None
     )
     _logging.configure(arguments.verbosity, log_file, console=console_log)
+    try:
+        return _run_configured(arguments, env, writer)
+    finally:
+        # Release the log file and the stdout handler bound to this invocation.
+        _logging.shutdown()
 
+
+def _run_configured(arguments: Arguments, env: Mapping[str, str], writer: Writer) -> int:
+    """The body of :func:`run` once logging is configured."""
     working_directory = arguments.working_directory
     if not working_directory.is_dir():
         _log.warning("The working directory '%s' does not exist.", working_directory)

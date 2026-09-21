@@ -19,10 +19,19 @@ _BUILD_AGENT_VARIABLES = ("GITHUB_ACTIONS", "GITHUB_ENV", "GITLAB_CI")
 
 
 @pytest.fixture(autouse=True)
-def _local_build_environment(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Hide the CI runner's own build-agent variables so tests behave as locally."""
-    for name in _BUILD_AGENT_VARIABLES:
-        monkeypatch.delenv(name, raising=False)
+def _local_build_environment() -> Iterator[None]:
+    """Hide the CI runner's own build-agent variables so tests behave as locally.
+
+    A private ``MonkeyPatch`` is used on purpose. Requesting the shared
+    ``monkeypatch`` fixture here would instantiate it before every other
+    fixture, so a test's ``monkeypatch.chdir(repo.path)`` would be undone
+    only *after* ``repo`` deleted its directory, and Windows refuses to
+    remove the process's current directory.
+    """
+    with pytest.MonkeyPatch.context() as patch:
+        for name in _BUILD_AGENT_VARIABLES:
+            patch.delenv(name, raising=False)
+        yield
 
 
 @pytest.fixture
