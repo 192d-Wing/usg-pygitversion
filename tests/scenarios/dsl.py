@@ -170,7 +170,18 @@ class Scenario(RepositoryFixture):
         assert _REAL_GITVERSION is not None
         config_path = self.path / "GitVersion.yml"
         cfg = configuration if configuration is not None else gitflow()
-        config_path.write_text(dump_mapping(cfg.to_mapping()), encoding="utf-8")
+        mapping = cfg.to_mapping()
+        # to_mapping omits None, which the reference would read as "use the
+        # preset default". Upstream tests set labels to null explicitly, so
+        # spell those out as YAML nulls to keep the comparison faithful.
+        if cfg.label is None:
+            mapping["label"] = None
+        branches = mapping.get("branches")
+        if isinstance(branches, dict):
+            for name, branch in cfg.branches.items():
+                if branch.label is None and isinstance(branches.get(name), dict):
+                    branches[name]["label"] = None
+        config_path.write_text(dump_mapping(mapping), encoding="utf-8")
         try:
             completed = subprocess.run(
                 [_REAL_GITVERSION, "/nocache", "/output", "json"],
