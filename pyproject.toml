@@ -22,7 +22,7 @@ requires-python = ">=3.11"
 authors = [{ name = "John Edward Willman V" }]
 keywords = ["gitversion", "semver", "versioning", "git", "ci"]
 classifiers = [
-  "Development Status :: 2 - Pre-Alpha",
+  "Development Status :: 5 - Production/Stable",
   "Environment :: Console",
   "Intended Audience :: Developers",
   "License :: OSI Approved :: MIT License",

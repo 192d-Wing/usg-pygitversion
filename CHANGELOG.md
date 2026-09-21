@@ -8,6 +8,8 @@ the tool itself from git history (PLAN.md 8.3).
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-09-21
+
 ### Changed
 - Renamed from `pygitversion` to `usg-pygitversion`: the PyPI distribution
   and console script are `usg-pygitversion`, the import package is
@@ -36,3 +38,6 @@ the tool itself from git history (PLAN.md 8.3).
 - AssemblyInfo, project-file and WiX updaters, the MSBuild task, dynamic
   repository cloning (`/url`) and build agents other than GitHub Actions and
   GitLab CI (see PLAN.md section 1).
+
+[Unreleased]: https://github.com/192d-Wing/usg-pygitversion/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/192d-Wing/usg-pygitversion/releases/tag/v1.0.0
