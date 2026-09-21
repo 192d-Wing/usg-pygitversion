@@ -15,11 +15,11 @@ from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from datetime import UTC
 
-from pygitversion.calculation.formatting import TemplateError, format_with
 from pygitversion.config.enums import AssemblyFileVersioningScheme, AssemblyVersioningScheme
 from pygitversion.config.schema import GitVersionConfiguration
 from pygitversion.dotnet.dateformat import format_datetime
 from pygitversion.errors import ConfigurationError
+from pygitversion.formatting import TemplateError, format_with
 from pygitversion.semver import SemanticVersion
 
 _SANITIZE_NAME = re.compile(r"[^a-zA-Z0-9-]")

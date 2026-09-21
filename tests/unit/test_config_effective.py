@@ -99,12 +99,13 @@ def test_branch_specific_label(branch: str, expected: str) -> None:
 
 
 def test_branch_specific_label_override_and_env() -> None:
-    cfg = build(
-        {"branches": {"feature": {"label": "{BranchName}-{env:BUILD ?? local}-{env:USER}"}}}
-    )
+    label = '{BranchName}-{env:BUILD ?? "local"}-{env:USER}'
+    cfg = build({"branches": {"feature": {"label": label}}})
     effective = get_effective_configuration(cfg, "feature/x")
     assert effective.branch_specific_label("feature/x", None, {"USER": "me"}) == "x-local-me"
-    assert effective.branch_specific_label("feature/x", "feature/y", {}) == "y-local--env-USER-"
+    assert effective.branch_specific_label("feature/x", "feature/y", {"USER": "me"}) == "y-local-me"
+    # An unresolvable template returns the raw label, as upstream.
+    assert effective.branch_specific_label("feature/x", None, {}) == label
     assert get_effective_configuration(cfg, "main").branch_specific_label("main") == ""
 
 

@@ -1,7 +1,8 @@
 # SPDX-License-Identifier: MIT
 r"""``{Placeholder}`` template expansion.
 
-Ports ``StringFormatWithExtension`` and ``LabelTokenizer`` from 6.8.2.
+Ports ``StringFormatWithExtension`` and ``LabelTokenizer`` from 6.8.2. Used
+for branch labels (``{BranchName}``) and the assembly format strings.
 
 Grammar inside braces: one or more alternatives separated by ``??``. Each
 alternative is a quoted literal ``"text"``, an integer literal, an

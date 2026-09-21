@@ -30,6 +30,7 @@ from pygitversion.config.schema import (
 )
 from pygitversion.dotnet import regex as dotnet_regex
 from pygitversion.errors import ConfigurationError
+from pygitversion.formatting import TemplateError, format_with
 from pygitversion.git.refname import ReferenceName
 from pygitversion.semver import SemanticVersionFormat
 
@@ -37,8 +38,6 @@ from pygitversion.semver import SemanticVersionFormat
 _SANITIZE_NAME = re.compile(r"[^a-zA-Z0-9-]")
 #: ``RegexPatterns.SanitizeLabelRegexPattern``: also allows ``.``.
 _SANITIZE_LABEL = re.compile(r"[^a-zA-Z0-9-.]")
-#: ``{Name}`` placeholders; ``{env:VAR}`` and ``{env:VAR ?? fallback}`` per upstream ``FormatWith``.
-_PLACEHOLDER = re.compile(r"\{([^{}]+)\}")
 
 
 @dataclass(frozen=True, slots=True)
@@ -194,33 +193,28 @@ class EffectiveConfiguration:
     ) -> str | None:
         """Expand ``{BranchName}`` placeholders in ``label``. Ports ``GetBranchSpecificLabel``.
 
-        Named groups from the branch ``regex`` become placeholders (values
-        sanitised to ``[a-zA-Z0-9-]``); ``{env:NAME}`` and
-        ``{env:NAME ?? default}`` read ``environment``. The result is
-        sanitised to ``[a-zA-Z0-9-.]``. Upstream returns the raw label if
-        formatting throws; unknown placeholders are left in place here and
-        then sanitised, which yields the same observable result.
+        Named groups of the branch ``regex`` become placeholders (values
+        sanitised to ``[a-zA-Z0-9-]``) and the template engine handles
+        ``{env:NAME}`` and ``??`` fallbacks. The result is sanitised to
+        ``[a-zA-Z0-9-.]``. As upstream, a template that cannot be evaluated
+        yields the *raw* label unchanged.
         """
         if self.label is None:
             return None
         name = branch_name.without_origin if isinstance(branch_name, ReferenceName) else branch_name
         effective_name = branch_name_override if branch_name_override is not None else name
         placeholders = _label_placeholders(self.regex, effective_name)
-        env = environment or {}
 
-        def substitute(match: re.Match[str]) -> str:
-            token = match.group(1)
-            if token.startswith("env:"):
-                expr = token[4:]
-                if "??" in expr:
-                    var, default = (part.strip() for part in expr.split("??", 1))
-                    return env.get(var, default)
-                if expr.strip() in env:
-                    return env[expr.strip()]
-                return match.group(0)
-            return placeholders.get(token, match.group(0))
+        def resolve(member: str) -> str | None:
+            if member not in placeholders:
+                msg = f"'{member}' is not a valid placeholder"
+                raise TemplateError(msg)
+            return placeholders[member]
 
-        expanded = _PLACEHOLDER.sub(substitute, self.label)
+        try:
+            expanded = format_with(self.label, resolve, environment or {})
+        except TemplateError:
+            return self.label
         return _SANITIZE_LABEL.sub("-", expanded)
 
 
