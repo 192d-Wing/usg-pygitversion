@@ -90,7 +90,8 @@ jobs:
       # The reference implementation. Pinned to the exact version being ported.
       - run: dotnet tool install --global GitVersion.Tool --version 6.8.2
       - run: echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
-      - run: gitversion /version
+      # The global tool's command is dotnet-gitversion (see the install output).
+      - run: dotnet-gitversion /version
       - run: uv sync --group dev
       # Every ported scenario and the CLI end-to-end tests also run the
       # reference binary and compare every output variable (PLAN.md D4, D6).
@@ -178,7 +179,11 @@ jobs:
           path: dist
       # Install the *built wheel* into a clean venv: proves packaging, entry
       # points and the module form, not the source tree.
+      # MSYS_NO_PATHCONV: Git Bash on Windows would otherwise rewrite the
+      # slash-style argument "/version" into "C:\Program Files\Git\version".
       - shell: bash
+        env:
+          MSYS_NO_PATHCONV: "1"
         run: |
           python -m venv "$RUNNER_TEMP/venv"
           if [ "$RUNNER_OS" = "Windows" ]; then VENV_BIN="$RUNNER_TEMP/venv/Scripts"; else VENV_BIN="$RUNNER_TEMP/venv/bin"; fi

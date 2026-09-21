@@ -45,18 +45,24 @@ def _find_reference_binary() -> str | None:
     """Locate the real .NET ``gitversion``, skipping this project's own console script.
 
     ``GITVERSION_REFERENCE`` overrides the search. Otherwise every ``PATH``
-    entry outside the active virtual environment is tried.
+    entry outside the active virtual environment is tried, first for
+    ``dotnet-gitversion`` (the command a ``dotnet tool install`` of
+    GitVersion.Tool registers) and then for a bare ``gitversion``.
     """
     explicit = os.environ.get("GITVERSION_REFERENCE")
     if explicit:
         return explicit
     venv = os.environ.get("VIRTUAL_ENV") or sys.prefix
-    outside = [
+    outside = os.pathsep.join(
         entry
         for entry in os.environ.get("PATH", "").split(os.pathsep)
         if entry and not entry.startswith(venv)
-    ]
-    return shutil.which("gitversion", path=os.pathsep.join(outside))
+    )
+    for name in ("dotnet-gitversion", "gitversion"):
+        found = shutil.which(name, path=outside)
+        if found is not None:
+            return found
+    return None
 
 
 _REAL_GITVERSION = _find_reference_binary()

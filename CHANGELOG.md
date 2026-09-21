@@ -1,3 +1,4 @@
+<!-- SPDX-License-Identifier: MIT -->
 # Changelog
 
 All notable changes to pygitversion are documented here. The format follows

@@ -3,12 +3,26 @@
 
 from __future__ import annotations
 
-import shutil
 from collections.abc import Iterator
 
 import pytest
 
 from tests.fixtures import RepositoryFixture
+from tests.scenarios.dsl import _REAL_GITVERSION
+
+# Variables that make the tool believe it runs on a build server (see
+# pygitversion.buildagents). They are present on every GitHub Actions and
+# GitLab runner, and build-server mode requires exactly one remote, which
+# the throwaway test repositories never have. Tests that need an agent set
+# these explicitly with ``monkeypatch``.
+_BUILD_AGENT_VARIABLES = ("GITHUB_ACTIONS", "GITHUB_ENV", "GITLAB_CI")
+
+
+@pytest.fixture(autouse=True)
+def _local_build_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Hide the CI runner's own build-agent variables so tests behave as locally."""
+    for name in _BUILD_AGENT_VARIABLES:
+        monkeypatch.delenv(name, raising=False)
 
 
 @pytest.fixture
@@ -25,7 +39,6 @@ def real_gitversion() -> str:
     Used by tests marked ``differential`` (PLAN.md D6). The binary is
     optional locally and provided in CI via ``dotnet tool install``.
     """
-    path = shutil.which("gitversion")
-    if path is None:
+    if _REAL_GITVERSION is None:
         pytest.skip("real gitversion binary not on PATH")
-    return path
+    return _REAL_GITVERSION

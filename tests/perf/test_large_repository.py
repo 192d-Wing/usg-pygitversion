@@ -9,7 +9,6 @@ default CI matrix; it runs in its own job.
 from __future__ import annotations
 
 import os
-import resource
 import subprocess
 import sys
 import time
@@ -18,6 +17,10 @@ import pytest
 from pygitversion import calculate
 
 from tests.fixtures import RepositoryFixture
+
+# ``resource`` is POSIX-only. Collection must still succeed on Windows, where
+# the default matrix deselects this module by marker but imports it first.
+resource = pytest.importorskip("resource", reason="resource module is POSIX-only")
 
 pytestmark = pytest.mark.memory
 
@@ -56,7 +59,8 @@ def build_linear_history(repo: RepositoryFixture, commits: int, tag_at: int) -> 
 
 
 def _max_rss_mb() -> float:
-    usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    # The annotation pins the type: ``resource`` is ``Any`` after importorskip.
+    usage: int = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     divisor = 1024 * 1024 if sys.platform == "darwin" else 1024
     return usage / divisor
 
