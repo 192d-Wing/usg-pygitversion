@@ -1,0 +1,160 @@
+# ---------------------------------------------------------------------------
+# pygitversion: a pure-Python port of GitVersion (https://gitversion.net).
+#
+# Build and tooling configuration. See PLAN.md sections 8 and 9 for the
+# rationale behind each setting. Security-relevant choices are marked with
+# the NIST SP 800-53 Rev 5 control they support.
+# ---------------------------------------------------------------------------
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pygitversion"
+description = "Semantic versioning from git history: a Python port of GitVersion, no .NET required."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+authors = [{ name = "John Edward Willman V" }]
+keywords = ["gitversion", "semver", "versioning", "git", "ci"]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Build Tools",
+  "Topic :: Software Development :: Version Control :: Git",
+  "Typing :: Typed",
+]
+# CM-7 (least functionality): a single runtime dependency, deliberately.
+dependencies = ["PyYAML>=6.0.2"]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/jwillman/pygitversion"
+Documentation = "https://github.com/jwillman/pygitversion#readme"
+Changelog = "https://github.com/jwillman/pygitversion/releases"
+Issues = "https://github.com/jwillman/pygitversion/issues"
+"Upstream (GitVersion)" = "https://gitversion.net/docs/"
+
+[project.scripts]
+# Both names are installed: `gitversion` for drop-in compatibility with the
+# .NET tool, `pygitversion` to disambiguate when both are present.
+gitversion = "pygitversion.cli.main:main"
+pygitversion = "pygitversion.cli.main:main"
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3",
+  "pytest-cov>=6.0",
+  "hypothesis>=6.120",
+  "mypy>=1.14",
+  "ruff>=0.9",
+  "types-PyYAML>=6.0.12",
+  "pip-audit>=2.8",
+  "pre-commit>=4.0",
+]
+
+# ---------------------------------------------------------------------------
+# hatch
+# ---------------------------------------------------------------------------
+[tool.hatch.version]
+# Phase 0: static placeholder. Phase 5 replaces this with a build hook that
+# runs pygitversion on its own repository (PLAN.md 8.3).
+path = "pygitversion/__about__.py"
+
+[tool.hatch.build.targets.sdist]
+include = ["pygitversion/", "tests/", "docs/", "PLAN.md", "README.md", "LICENSE", "SECURITY.md"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["pygitversion"]
+
+# ---------------------------------------------------------------------------
+# ruff: lint + format. Rule families and the controls they evidence:
+#   S  (flake8-bandit)      SI-16, SA-11: no eval/exec/pickle/yaml.load/shell=True
+#   D  (pydocstyle)         PLAN.md 9.1: docstrings are mandatory
+#   B  (bugbear)            general correctness
+#   PTH                     pathlib everywhere (AC-3 path handling goes through Path)
+#   T20                     no stray print(); all output goes through the writers
+# ---------------------------------------------------------------------------
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["pygitversion", "tests"]
+# Markdown code fences are prose examples, not formatted source.
+extend-exclude = ["*.md"]
+
+[tool.ruff.lint]
+select = [
+  "E", "W", "F", "I", "N", "UP", "B", "A", "C4", "SIM", "RET", "ARG", "PTH",
+  "PL", "RUF", "S", "D", "T20", "ERA", "ISC", "PIE", "TID", "PERF", "FURB",
+]
+ignore = [
+  "D203",   # one-blank-line-before-class (conflicts with D211)
+  "D213",   # multi-line-summary-second-line (conflicts with D212)
+  "PLR0913",# too many arguments: ported upstream signatures are what they are
+  "ISC001", # conflicts with the formatter
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests may use assert, may build fixture git repos with subprocess, and may
+# skip docstrings on individual test functions (module docstrings still required).
+"tests/**" = ["S101", "S603", "S607", "D102", "D103", "PLR2004", "ARG001"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.flake8-bandit]
+# S603/S607 fire on every subprocess call. The single sanctioned call site is
+# pygitversion/git/command.py, which carries an inline `# noqa` with a
+# justification. Everywhere else the rule stays on.
+check-typed-exception = true
+
+[tool.ruff.format]
+quote-style = "double"
+docstring-code-format = true
+
+# ---------------------------------------------------------------------------
+# mypy: strict, no escape hatches without a comment.
+# ---------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unreachable = true
+warn_return_any = true
+disallow_any_unimported = true
+no_implicit_reexport = true
+show_error_codes = true
+files = ["pygitversion", "tests"]
+
+# ---------------------------------------------------------------------------
+# pytest: ResourceWarning is an error (PLAN.md 9.4) so an unclosed file or
+# un-waited subprocess fails the suite.
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config -W error::ResourceWarning"
+filterwarnings = ["error::ResourceWarning"]
+markers = [
+  "differential: compares output with the real GitVersion binary (requires `gitversion` on PATH)",
+  "scenario: ported upstream integration scenario",
+  "memory: memory budget test on a synthetic large repository",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["pygitversion"]
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+exclude_also = ["if TYPE_CHECKING:", "raise NotImplementedError", "@overload"]
