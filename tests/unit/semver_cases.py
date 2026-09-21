@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Test data converted from upstream GitVersion 6.8.2.
 
 Source: src/GitVersion.Core.Tests/VersionCalculation/SemanticVersionTests.cs

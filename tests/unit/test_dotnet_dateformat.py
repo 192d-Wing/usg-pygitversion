@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for the .NET custom date-format engine."""
 
 from __future__ import annotations

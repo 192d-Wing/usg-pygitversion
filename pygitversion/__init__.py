@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """pygitversion: semantic versioning from git history, without .NET.
 
 A pure-Python port of GitVersion 6.8.2 (https://gitversion.net). The public,

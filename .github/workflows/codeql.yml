@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 # Static analysis on every PR and weekly (SA-11).
 name: codeql
 

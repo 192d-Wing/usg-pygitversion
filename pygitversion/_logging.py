@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Logging setup mapped to GitVersion's ``/verbosity`` levels.
 
 Audit-relevant behaviour (NIST SP 800-53 AU-2, AU-3, AU-9):

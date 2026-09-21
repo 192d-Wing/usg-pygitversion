@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 r"""Translate .NET regular expressions to Python :mod:`re` patterns.
 
 GitVersion configuration (``tag-prefix``, branch ``regex``, bump-message

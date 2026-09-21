@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 # Release pipeline (PLAN.md 8.1, 8.2). Publishes to PyPI through Trusted
 # Publishing (OIDC): no long-lived tokens exist anywhere (IA-5). The `pypi`
 # environment must be configured in the repository with required reviewers

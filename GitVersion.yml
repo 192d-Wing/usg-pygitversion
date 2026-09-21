@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 # pygitversion versions itself with GitVersion semantics (PLAN.md 8.3).
 # GitHubFlow: main is ContinuousDelivery, so untagged commits on main are
 # pre-releases (1.2.1-5) and only a v* tag produces a final version.

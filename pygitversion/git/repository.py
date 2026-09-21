@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Read-only repository facade over :class:`~pygitversion.git.command.GitCommand`.
 
 Ports the subset of ``IGitRepository`` that version calculation needs:

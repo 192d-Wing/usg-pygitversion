@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for ReferenceName, mirroring upstream ReferenceNameTests."""
 
 from __future__ import annotations

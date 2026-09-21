@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Git reference names in canonical and friendly forms.
 
 Ports ``GitVersion.Core/Git/ReferenceName.cs`` exactly, including the

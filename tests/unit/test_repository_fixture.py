@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for the repository fixture DSL itself.
 
 The fixture is the foundation of every scenario test, so its own behaviour

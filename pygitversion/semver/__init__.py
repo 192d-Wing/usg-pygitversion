@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Semantic version model: parsing, comparison, formatting and incrementing.
 
 Ports ``GitVersion.Core/SemVer/``. The public names are re-exported here.

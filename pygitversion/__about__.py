@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Package version metadata.
 
 Phase 0 uses a static placeholder. From Phase 5 onward a hatch build hook

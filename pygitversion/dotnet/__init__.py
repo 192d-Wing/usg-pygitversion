@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """.NET compatibility shims.
 
 GitVersion's configuration surface leaks two .NET-isms that users rely on:

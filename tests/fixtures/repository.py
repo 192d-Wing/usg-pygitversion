@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """A small DSL for building real git repositories in tests.
 
 Ports the intent of upstream ``GitVersion.Testing/Fixtures/RepositoryFixtureBase``

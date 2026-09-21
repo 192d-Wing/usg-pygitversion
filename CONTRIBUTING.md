@@ -1,3 +1,4 @@
+<!-- SPDX-License-Identifier: MIT -->
 # Contributing
 
 This project ports [GitVersion](https://gitversion.net) 6.8.2 to Python.
@@ -25,6 +26,9 @@ uv run pytest -m differential
   source or its scenario tests. Cite the upstream type or method in the
   docstring. If you must deviate, comment why in place and add an entry to
   `docs/deviations.md`.
+- **SPDX header on line 1 of every file.** `# SPDX-License-Identifier: MIT`
+  for code and config, `<!-- SPDX-License-Identifier: MIT -->` for Markdown.
+  `tests/unit/test_spdx.py` fails the build if a tracked file lacks one.
 - **Docstrings everywhere.** `ruff` enforces pydocstyle (Google style).
 - **Strict typing.** `mypy --strict` must pass with no new ignores.
 - **One subprocess call site.** All git invocations go through

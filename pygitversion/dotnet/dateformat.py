@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 r"""Format datetimes with .NET custom format strings.
 
 GitVersion's ``commit-date-format`` (default ``yyyy-MM-dd``) is a .NET

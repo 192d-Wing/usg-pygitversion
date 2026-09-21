@@ -1,3 +1,4 @@
+<!-- SPDX-License-Identifier: MIT -->
 # Deviations from GitVersion 6.8.2
 
 Every intentional behavioural difference between pygitversion and the

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for the .NET-to-Python regex translation shim."""
 
 from __future__ import annotations

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Pre-release label and number of a semantic version (``beta.1``).
 
 Ports ``GitVersion.Core/SemVer/SemanticVersionPreReleaseTag.cs``.

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for the Phase 0 CLI surface."""
 
 from __future__ import annotations

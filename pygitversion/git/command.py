@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """The single sanctioned subprocess call site for running ``git``.
 
 Hardening, mapped to PLAN.md 9.3 and NIST SP 800-53:

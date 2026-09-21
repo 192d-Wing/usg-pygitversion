@@ -1,3 +1,4 @@
+<!-- SPDX-License-Identifier: MIT -->
 ## Summary
 
 <!-- What changed and why. Name the upstream GitVersion type/method ported, if any. -->

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Compiled regular expressions for semantic-version parsing.
 
 These are the upstream patterns from ``RegexPatterns.SemanticVersion``

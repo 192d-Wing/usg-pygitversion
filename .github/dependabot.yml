@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 # SI-2 flaw remediation: automated dependency and action updates.
 version: 2
 updates:

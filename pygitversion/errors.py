@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Typed exception hierarchy for pygitversion.
 
 Every error the tool raises on purpose derives from :class:`GitVersionError`

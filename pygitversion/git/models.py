@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Immutable value objects describing repository state.
 
 Ports the shape of ``ICommit``, ``IBranch`` and ``ITag`` from

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """The semantic version value type.
 
 Ports ``GitVersion.Core/SemVer/SemanticVersion.cs`` including the three

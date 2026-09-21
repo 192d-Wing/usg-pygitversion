@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Module entry point so ``python -m pygitversion`` works inside any venv.
 
 This is the supported invocation for environments where the ``gitversion``

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Command-line entry point.
 
 Accepts GitVersion's ``/flag`` syntax and POSIX ``--flag`` syntax. The

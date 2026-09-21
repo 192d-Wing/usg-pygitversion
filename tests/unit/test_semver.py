@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Semantic version tests, driven by the upstream test table.
 
 The data in ``semver_cases.py`` is converted mechanically from

@@ -1,3 +1,4 @@
+<!-- SPDX-License-Identifier: MIT -->
 # pygitversion: Plan for a Python port of GitVersion
 
 Status: APPROVED (rev 7: engineering standards section added (docs, NIST 800-53 Rev5, security, memory); all questions resolved; PyPI-only distribution confirmed; PyPI wheel publishing in CI/CD; GitHub+GitLab agents, generic env export + Python API; Python 3.11 floor, git binary backend, local gitversion 6.8.2 available for differential tests)

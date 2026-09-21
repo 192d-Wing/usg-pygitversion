@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Read-only access to a git repository through the ``git`` binary.
 
 Design (PLAN.md D1, 9.3, 9.4):

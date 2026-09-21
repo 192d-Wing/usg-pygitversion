@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """The part of a version to increment.
 
 Ports ``GitVersion.Core/SemVer/VersionField.cs``. The integer values are

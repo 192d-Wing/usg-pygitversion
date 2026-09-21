@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 # Continuous integration (PLAN.md 8.1). Third-party actions are pinned to
 # commit SHAs (NIST SP 800-53 SR-3/SR-4: supply chain integrity); the
 # version comment beside each pin is for humans and Dependabot.

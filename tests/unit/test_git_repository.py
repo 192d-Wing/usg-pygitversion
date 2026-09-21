@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Tests for the git subprocess layer against real repositories."""
 
 from __future__ import annotations

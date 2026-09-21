@@ -1,3 +1,4 @@
+<!-- SPDX-License-Identifier: MIT -->
 # pygitversion
 
 Semantic versioning from git history, without .NET. A pure-Python port of

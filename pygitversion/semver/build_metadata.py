@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """Build metadata attached to a semantic version (``+5.Branch.main.Sha.abc``).
 
 Ports ``GitVersion.Core/SemVer/SemanticVersionBuildMetaData.cs``. Upstream
