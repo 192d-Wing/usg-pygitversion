@@ -19,3 +19,6 @@ pygitversion/_version.py
 .idea/
 .vscode/
 .DS_Store
+
+# Hypothesis example database
+.hypothesis/

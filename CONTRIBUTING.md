@@ -29,6 +29,7 @@ uv run pytest -m differential
 - **Strict typing.** `mypy --strict` must pass with no new ignores.
 - **One subprocess call site.** All git invocations go through
   `pygitversion/git/command.py`. Tests use `tests/fixtures/repository.py`.
+  All user-supplied regexes go through `pygitversion/dotnet/regex.py`.
 - **Treat the repository as hostile.** Branch names, tags and commit
   messages are untrusted input: never shell-interpolate, never use as format
   strings, never build file paths from them.

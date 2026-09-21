@@ -12,23 +12,23 @@ Status legend: **Implemented** (evidence exists in this repo), **Planned**
 
 | Control | Title | Status | Implementation | Evidence |
 |---------|-------|--------|----------------|----------|
-| AC-3 | Access Enforcement | Planned (Ph1) | Reads confined to the repository root; writes only to the cache dir and explicit output paths; symlink escapes rejected | `pygitversion/git/`, path tests |
-| AC-6 | Least Privilege | Planned (Ph1) | Never modifies refs, working tree or git config; `--no-optional-locks`; hooks disabled | `pygitversion/git/command.py` |
+| AC-3 | Access Enforcement | Partially implemented | Repository is opened read-only; git-dir and work-tree resolved by git itself; output-path confinement lands with the writers (Ph5) | `pygitversion/git/repository.py`, `test_git_repository.py` |
+| AC-6 | Least Privilege | Implemented | Read-only git calls; `--no-optional-locks`; `core.hooksPath` pointed at the null device; no pager/editor; `GIT_TERMINAL_PROMPT=0` | `pygitversion/git/command.py`, `test_command_environment_is_minimal_and_hooks_disabled` |
 | AU-2 / AU-3 | Event Logging / Content of Audit Records | Implemented | Timestamped, levelled records via `logging`; verbosity mapped to upstream names | `pygitversion/_logging.py` |
 | AU-9 | Protection of Audit Information | Implemented | `/l` log file created `0o600` | `pygitversion/_logging.py::configure` |
 | CM-5 | Access Restrictions for Change | Implemented | Branch protection with required review; PR template checklist | `.github/pull_request_template.md`, repo settings |
 | CM-6 | Configuration Settings | Planned (Ph2) | Secure, upstream-identical defaults; `/showconfig` renders effective config | `pygitversion/config/` |
 | CM-7 | Least Functionality | Implemented | One runtime dependency; no plugins; no telemetry; features opt-in by flag | `pyproject.toml` |
 | IA-5 | Authenticator Management | Implemented (policy) | Tool accepts no credentials; `/u` `/p` rejected | `docs/deviations.md`, CLI tests (Ph5) |
-| SA-11 | Developer Testing and Evaluation | Implemented | ruff bandit rules, mypy strict, pip-audit, CodeQL, differential tests; hypothesis fuzzing (Ph1) | `.github/workflows/ci.yml`, `codeql.yml` |
+| SA-11 | Developer Testing and Evaluation | Implemented | ruff bandit rules, mypy strict, pip-audit, CodeQL, differential tests; hypothesis property tests on the semver parser; 1,203 upstream semver cases replayed | `.github/workflows/ci.yml`, `codeql.yml`, `tests/unit/test_semver.py` |
 | SA-15 | Development Process, Standards, and Tools | Implemented | PLAN.md section 9, CONTRIBUTING.md, PR template | those files |
 | SC-8 / SC-13 | Transmission Confidentiality / Cryptographic Protection | Implemented (by design) | No network I/O in v1; only SHA-256 from `hashlib` for cache keys | `pyproject.toml` (no HTTP deps), cache module (Ph5) |
 | SC-28 | Protection of Information at Rest | Planned (Ph5) | Cache files `0o600`, atomic replace, contain only version variables | `pygitversion/cache/` |
 | SI-2 | Flaw Remediation | Implemented | Dependabot weekly; pip-audit blocks merge; SECURITY.md process | `.github/dependabot.yml`, `SECURITY.md` |
 | SI-7 | Software, Firmware, and Information Integrity | Implemented | Release job verifies SHA256SUMS before publish; PEP 740 attestations; SBOM attached | `.github/workflows/release.yml` |
-| SI-10 | Information Input Validation | Partially implemented | argparse with typed options (Ph0); typed config schema, bounded regex, strict git output parsing (Ph1-2) | `pygitversion/cli/main.py`, `tests/unit/test_cli.py` |
+| SI-10 | Information Input Validation | Partially implemented | argparse with typed options; .NET regex translated with length cap, bounded subjects and rejection of unsupported constructs; NUL-delimited strict git output parsing; date-format length cap; typed config schema (Ph2) | `pygitversion/dotnet/regex.py`, `pygitversion/git/repository.py::_parse_log`, `test_dotnet_regex.py` |
 | SI-11 | Error Handling | Implemented | Typed exceptions, one-line messages, tracebacks only at Diagnostic | `pygitversion/errors.py`, `test_unported_path_fails_cleanly` |
-| SI-16 | Memory Protection | Implemented (lint-enforced) | No eval/exec/pickle/yaml.load/shell=True; enforced by ruff `S` rules | `pyproject.toml [tool.ruff.lint]` |
+| SI-16 | Memory Protection | Implemented | No eval/exec/pickle/yaml.load/shell=True, enforced by ruff `S` rules; single subprocess call site with argv lists, minimal environment and timeouts; bounded commit walks and caches | `pyproject.toml`, `pygitversion/git/command.py`, `test_walk_enforces_commit_cap` |
 | SR-3 / SR-4 | Supply Chain Controls / Provenance | Implemented | Hashed `uv.lock`; actions pinned to SHAs; Dependabot; SBOM | `uv.lock`, `.github/workflows/*.yml` |
 | SR-11 | Component Authenticity | Implemented | Trusted Publishing (OIDC), no stored tokens; attestations | `.github/workflows/release.yml` |
 

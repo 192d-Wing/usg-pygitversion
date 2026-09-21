@@ -101,6 +101,7 @@ ignore = [
   "D203",   # one-blank-line-before-class (conflicts with D211)
   "D213",   # multi-line-summary-second-line (conflicts with D212)
   "PLR0913",# too many arguments: ported upstream signatures are what they are
+  "PLR0917",# too many positional arguments: same reason
   "ISC001", # conflicts with the formatter
 ]
 
@@ -108,6 +109,8 @@ ignore = [
 # Tests may use assert, may build fixture git repos with subprocess, and may
 # skip docstrings on individual test functions (module docstrings still required).
 "tests/**" = ["S101", "S603", "S607", "D102", "D103", "PLR2004", "ARG001"]
+# Mechanically generated from upstream; one case per line is the point.
+"tests/unit/semver_cases.py" = ["E501"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

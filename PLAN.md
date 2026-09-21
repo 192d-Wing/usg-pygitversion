@@ -115,9 +115,11 @@ pygitversion/
   cli/            argparse front-end, /flag translation, verbosity, exit codes
   git/            GitRepository abstraction; subprocess backend; models
                   (Commit, Branch, Tag, ReferenceName); commit graph cache
+  dotnet/         .NET compatibility shims: regex dialect translation
+                  (regex.py) and custom date-format engine (dateformat.py)
   config/         schema dataclasses, YAML loader, presets/*.yml (vendored),
                   merge/override logic, EffectiveConfiguration, validation,
-                  dotnet_regex shim, /showconfig serializer
+                  /showconfig serializer
   semver/         SemanticVersion, PreReleaseTag, BuildMetaData, parsing
                   (Strict/Loose), comparison, formatting
   calculation/    context factory, EffectiveBranchConfigurationFinder,
