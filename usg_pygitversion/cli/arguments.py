@@ -200,6 +200,21 @@ def _parse_show_variable(value: str | None, switch: str) -> str:
     return found
 
 
+def _parse_commit_id(value: str | None) -> str:
+    """Validate ``/c``: a revision, never something git would read as an option.
+
+    The value is handed to ``git log`` as a revision. Git is also told
+    ``--end-of-options`` at the call site, but the CLI rejects a leading
+    ``-`` too so the mistake is reported where it was made (SI-10) instead
+    of surfacing as a "bad revision" from git.
+    """
+    if value is None or not value.strip():
+        raise UsageError("Switch '/c' requires a commit id.")
+    if value.startswith("-"):
+        raise UsageError(f"Invalid commit id '{value}': it must not start with '-'.")
+    return value
+
+
 def _parse_format(value: str | None) -> str:
     message = "Format requires a valid format string. Available variables are: " + ", ".join(
         AVAILABLE_VARIABLES
@@ -263,7 +278,7 @@ def _apply_switch(arguments: Arguments, name: str, switch: str, values: list[str
         arguments.show_configuration = lowered in _TRUE_VALUES or lowered not in _FALSE_VALUES
         return True
     if name == "c":
-        arguments.commit_id = _single(values, switch)
+        arguments.commit_id = _parse_commit_id(_single(values, switch))
         return True
     if name == "b":
         arguments.target_branch = _single(values, switch)

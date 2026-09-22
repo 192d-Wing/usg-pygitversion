@@ -1,8 +1,18 @@
 # SPDX-License-Identifier: MIT
 # Release pipeline (PLAN.md 8.1, 8.2). Publishes to PyPI through Trusted
-# Publishing (OIDC): no long-lived tokens exist anywhere (IA-5). The `pypi`
-# environment must be configured in the repository with required reviewers
-# and a deployment-branch rule restricted to tags matching v*.
+# Publishing (OIDC): no long-lived tokens exist anywhere (IA-5).
+#
+# Integrity chain (SI-7, SR-3, SR-4):
+#   1. The reusable CI workflow builds the wheel and sdist once, hashes them
+#      immediately, runs the whole test matrix, and uploads `dist`.
+#   2. This workflow never rebuilds. It downloads that exact `dist`, verifies
+#      the hashes before anything else touches it, and generates the SBOM
+#      into a separate directory with a version-pinned tool.
+#   3. The publish jobs verify the hashes again after download, then publish
+#      with attestations. Only a `v*` tag can reach them; a manual dispatch
+#      stops after the build step, which makes it a safe dry run.
+# The `pypi` and `testpypi` environments must be configured in the repository
+# with required reviewers and a deployment-branch rule restricted to tags v*.
 name: release
 
 on:
@@ -26,14 +36,14 @@ jobs:
     outputs:
       prerelease: ${{ steps.kind.outputs.prerelease }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # The artefacts CI tested, not a rebuild: the hash check below is only
+      # meaningful because the same bytes flow from CI to PyPI.
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          persist-credentials: false
-          fetch-depth: 0
-      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
-        with:
-          python-version: "3.11"
-      - run: uv build
+          name: dist
+          path: dist
+      - name: Verify artefact hashes match what CI tested (SI-7)
+        run: sha256sum -c dist/SHA256SUMS
       - name: Classify tag (pre-release goes to TestPyPI)
         id: kind
         run: |
@@ -41,18 +51,31 @@ jobs:
             *-*|*a*|*b*|*rc*) echo "prerelease=true"  >> "$GITHUB_OUTPUT" ;;
             *)                echo "prerelease=false" >> "$GITHUB_OUTPUT" ;;
           esac
-      # SR-4 / SI-7: generate an SBOM for the release artefacts.
-      - run: uvx --from cyclonedx-bom cyclonedx-py environment --of JSON -o dist/sbom.cdx.json "$(uv python find)" || uvx cyclonedx-bom environment --of JSON -o dist/sbom.cdx.json
-      - run: sha256sum dist/* | tee dist/SHA256SUMS
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          python-version: "3.11"
+      # SR-4 / SI-7: generate an SBOM for the release artefacts. The generator
+      # is version-pinned (Dependabot cannot bump `uvx` pins; review manually)
+      # and writes outside dist/, so it can neither replace an artefact nor
+      # invalidate the hashes verified above.
+      - name: Generate SBOM (CycloneDX)
+        run: |
+          mkdir -p sbom
+          uvx --from cyclonedx-bom==7.4.0 cyclonedx-py environment --of JSON -o sbom/sbom.cdx.json "$(uv python find)"
+      - name: Verify artefacts are unchanged after SBOM generation (SI-7)
+        run: sha256sum -c dist/SHA256SUMS
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: release-dist
-          path: dist/
+          path: |
+            dist/
+            sbom/
           if-no-files-found: error
 
   publish-testpypi:
     needs: build
-    if: needs.build.outputs.prerelease == 'true'
+    # Only a tag push may publish; workflow_dispatch stops at `build`.
+    if: startsWith(github.ref, 'refs/tags/v') && needs.build.outputs.prerelease == 'true'
     runs-on: ubuntu-latest
     environment:
       name: testpypi
@@ -63,8 +86,9 @@ jobs:
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: release-dist
-          path: dist
-      - run: rm -f dist/SHA256SUMS dist/sbom.cdx.json
+      - name: Verify artefact hashes match what CI tested (SI-7)
+        run: sha256sum -c dist/SHA256SUMS
+      - run: rm -f dist/SHA256SUMS
       - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
         with:
           repository-url: https://test.pypi.org/legacy/
@@ -72,7 +96,8 @@ jobs:
 
   publish-pypi:
     needs: build
-    if: needs.build.outputs.prerelease == 'false'
+    # Only a tag push may publish; workflow_dispatch stops at `build`.
+    if: startsWith(github.ref, 'refs/tags/v') && needs.build.outputs.prerelease == 'false'
     runs-on: ubuntu-latest
     environment:
       name: pypi
@@ -83,17 +108,16 @@ jobs:
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: release-dist
-          path: dist
       - name: Verify artefact hashes match what CI tested (SI-7)
         run: sha256sum -c dist/SHA256SUMS
-      - run: rm -f dist/SHA256SUMS dist/sbom.cdx.json
+      - run: rm -f dist/SHA256SUMS
       - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
         with:
           attestations: true
 
   github-release:
     needs: [build, publish-pypi]
-    if: always() && needs.build.result == 'success' && (needs.publish-pypi.result == 'success' || needs.publish-pypi.result == 'skipped')
+    if: always() && startsWith(github.ref, 'refs/tags/v') && needs.build.result == 'success' && (needs.publish-pypi.result == 'success' || needs.publish-pypi.result == 'skipped')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -101,9 +125,12 @@ jobs:
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: release-dist
-          path: dist
+      - name: Verify artefact hashes match what CI tested (SI-7)
+        run: sha256sum -c dist/SHA256SUMS
       - uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
-          files: dist/*
+          files: |
+            dist/*
+            sbom/*
           generate_release_notes: true
           prerelease: ${{ needs.build.outputs.prerelease == 'true' }}

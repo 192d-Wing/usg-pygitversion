@@ -161,6 +161,8 @@ def _calculate(
             arguments.working_directory,
             arguments.override_configuration,
             arguments.configuration_file,
+            target_branch=target_branch,
+            commit_id=arguments.commit_id,
         )
         cached = cache.load(key)
         if cached is not None:

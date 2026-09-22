@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import pytest
-from usg_pygitversion.formatting import TemplateError, format_with
+from usg_pygitversion.formatting import TemplateError, format_with, redact_secrets
 
 _MEMBERS = {"Major": "1", "Minor": "2", "Empty": "", "Name": "hello world", "Missing": None}
 
@@ -65,3 +65,21 @@ def test_first_resolvable_alternative_wins_and_errors_are_deferred() -> None:
     assert format_with("{Unknown ?? Minor}", _resolve, {}) == "2"
     with pytest.raises(TemplateError):
         format_with("{Unknown ?? AlsoUnknown}", _resolve, {})
+
+
+def test_redact_secrets_withholds_credential_like_names() -> None:
+    environment = {
+        "HOME": "/home/ci",
+        "BUILD_NUMBER": "7",
+        "GITHUB_TOKEN": "ghs_x",
+        "AWS_SECRET_ACCESS_KEY": "k",
+        "DbPassword": "p",
+        "api-key": "a",
+        "NPM_AUTH": "n",
+    }
+    kept = redact_secrets(environment)
+    assert kept == {"HOME": "/home/ci", "BUILD_NUMBER": "7"}
+    # A withheld variable behaves exactly like an unset one for templates.
+    assert format_with("{env:GITHUB_TOKEN ?? Minor}", _resolve, kept) == "2"
+    with pytest.raises(TemplateError, match="not found"):
+        format_with("{env:GITHUB_TOKEN}", _resolve, kept)

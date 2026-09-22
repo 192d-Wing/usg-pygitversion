@@ -11,6 +11,7 @@ from usg_pygitversion.calculation.store import RepositoryStore
 from usg_pygitversion.calculation.tagged_versions import TaggedSemanticVersionRepository
 from usg_pygitversion.config.schema import GitVersionConfiguration
 from usg_pygitversion.errors import RepositoryError
+from usg_pygitversion.formatting import redact_secrets
 from usg_pygitversion.git.models import Branch, Commit
 
 _log = logging.getLogger("usg_pygitversion.calculation")
@@ -68,5 +69,7 @@ def create_context(
         configuration=configuration,
         is_current_commit_tagged=current_commit in tagged,
         uncommitted_changes=store.uncommitted_changes,
-        environment=dict(environment) if environment is not None else {},
+        # Configuration-driven templates only ever see a redacted environment
+        # (SC-28): a GitVersion.yml label must not be able to lift a CI secret.
+        environment=redact_secrets(environment) if environment is not None else {},
     )

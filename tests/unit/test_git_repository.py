@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import subprocess
+import sys
 from datetime import UTC
 from pathlib import Path
 
@@ -233,3 +234,56 @@ def test_fixture_and_wrapper_agree(repo: RepositoryFixture) -> None:
     assert GitCommand(repo.path).run("rev-parse", "HEAD") == sha
     # sanity: the wrapper really is a subprocess boundary
     assert isinstance(subprocess.run, object)
+
+
+def test_revision_arguments_cannot_inject_git_options(
+    repo: RepositoryFixture, tmp_path: Path
+) -> None:
+    # `git log --output=<file>` would truncate and write that file. Every
+    # revision is preceded by --end-of-options, so it is a bad revision (SI-10).
+    repo.make_a_commit()
+    g = GitRepository(repo.path)
+    target = tmp_path / "injected.txt"
+    with pytest.raises(RepositoryError, match="unknown revision"):
+        g.commit(f"--output={target}")
+    with pytest.raises(GitCommandError):
+        list(g.walk(f"--output={target}"))
+    assert g.merge_base(f"--output={target}", "HEAD") is None
+    assert not target.exists()
+
+
+def _fake_git(directory: Path, body: str) -> str:
+    """Write a shell script that stands in for git (POSIX only)."""
+    script = directory / "fake-git"
+    script.write_text("#!/bin/sh\n" + body, encoding="utf-8")
+    script.chmod(0o755)
+    return str(script)
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="shell-script stand-in for git")
+def test_stream_does_not_deadlock_on_large_stderr(repo: RepositoryFixture, tmp_path: Path) -> None:
+    # 256 KiB on stderr is far more than a pipe buffer; with stderr as a pipe
+    # that is never drained the child would block and so would we (9.4).
+    fake = _fake_git(
+        tmp_path,
+        "i=0\n"
+        "while [ $i -lt 4096 ]; do printf 'x%.0s' $(seq 1 64) >&2; echo >&2; i=$((i+1)); done\n"
+        "echo line1\necho line2\nexit 3\n",
+    )
+    cmd = GitCommand(repo.path, timeout=30, git_executable=fake)
+    with pytest.raises(GitCommandError) as info:
+        list(cmd.stream("log"))
+    assert info.value.returncode == 3
+    # The captured stderr is capped, not unbounded.
+    assert 0 < len(info.value.stderr) <= 16 * 1024
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="shell-script stand-in for git")
+def test_stream_times_out_and_kills_the_child(repo: RepositoryFixture, tmp_path: Path) -> None:
+    fake = _fake_git(tmp_path, "echo first\nsleep 30\necho never\n")
+    cmd = GitCommand(repo.path, timeout=0.5, git_executable=fake)
+    lines: list[str] = []
+    with pytest.raises(GitCommandError, match="timed out"):
+        lines.extend(cmd.stream("log"))
+    # What arrived before the deadline was yielded; the rest never came.
+    assert lines == ["first"]

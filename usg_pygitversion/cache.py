@@ -7,6 +7,12 @@ configuration file, the HEAD snapshot and the override document. SHA-1 is
 used only as a cache fingerprint for compatibility with the reference tool's
 key format, never for integrity or authentication.
 
+Deviation (``docs/deviations.md``): the snapshot also covers the requested
+target branch (``/b`` or the build agent's branch) and commit (``/c``).
+Upstream can omit them because it checks the target branch out before
+calculating; this port is read-only, so without them a cached HEAD result
+would be served for a different branch or commit (SI-7 integrity).
+
 Cache files are written with owner-only permissions (SC-28) and a corrupt
 file is deleted rather than trusted (SI-10).
 """
@@ -78,8 +84,22 @@ def cache_key(
     working_directory: Path,
     override_document: Mapping[str, Any] | None,
     explicit_config_file: str | None = None,
+    *,
+    target_branch: str | None = None,
+    commit_id: str | None = None,
 ) -> str:
-    """Ports ``GitVersionCacheKeyFactory.Create``."""
+    """Ports ``GitVersionCacheKeyFactory.Create``.
+
+    Args:
+        repository: The open repository.
+        working_directory: Where the configuration file is looked for first.
+        override_document: ``/overrideconfig`` values, if any.
+        explicit_config_file: ``/config`` path, if any.
+        target_branch: The branch the calculation is for when it is not
+            ``HEAD`` (``/b``, ``GITVERSION_BRANCH`` or a build agent).
+        commit_id: The commit the calculation is for when it is not the
+            branch tip (``/c``).
+    """
     git_system = _sha1(":".join(_directory_contents(repository.git_dir / "refs")))
     config_path = find_configuration_file(working_directory, explicit_config_file)
     if config_path is None:
@@ -87,6 +107,10 @@ def cache_key(
     config_hash = _sha1(config_path.read_text(encoding="utf-8")) if config_path else ""
     head = repository.head()
     snapshot = _sha1(f"{head.name.canonical}:{head.tip}") if head.tip else head.name.canonical
+    # Upstream's key stops at HEAD. Fold in the requested branch and commit
+    # so that "/b other" or "/c <sha>" never reuse a result computed for HEAD.
+    if target_branch or commit_id:
+        snapshot = _sha1(f"{snapshot}:{target_branch or ''}:{commit_id or ''}")
     override_hash = _sha1(dump_mapping(dict(override_document))) if override_document else ""
     return _sha1(":".join([git_system, config_hash, snapshot, override_hash]))
 

@@ -42,3 +42,19 @@ def test_round_trip_and_corrupt_file_is_removed(repo: RepositoryFixture) -> None
     assert provider.load(key) is None
     assert not path.exists()
     assert provider.directory.is_dir()
+
+
+def test_key_changes_with_target_branch_and_commit(repo: RepositoryFixture) -> None:
+    # Upstream's key stops at HEAD; this port is read-only so /b and /c must
+    # be part of the key or a HEAD result would be served for them (SI-7).
+    first = repo.make_a_commit()
+    repo.make_a_commit()
+    repository = GitRepository(repo.path)
+    base = cache_key(repository, repo.path, None)
+    assert cache_key(repository, repo.path, None, commit_id=first) != base
+    assert cache_key(repository, repo.path, None, target_branch="other") != base
+    assert cache_key(repository, repo.path, None, target_branch="other") != cache_key(
+        repository, repo.path, None, commit_id=first
+    )
+    # Absent values leave the upstream-shaped key untouched.
+    assert cache_key(repository, repo.path, None, target_branch=None, commit_id="") == base

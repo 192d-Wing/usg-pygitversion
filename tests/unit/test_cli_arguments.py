@@ -137,3 +137,13 @@ def test_verbosity_and_diag(tmp_path: Path) -> None:
 def test_too_many_values(tmp_path: Path) -> None:
     with pytest.raises(UsageError, match="Could not parse command line parameter 'extra'"):
         parse_arguments(["/b", "main", "extra"], current_directory=str(tmp_path))
+
+
+@pytest.mark.parametrize("value", ["--output=/tmp/x", "-n", "--all"])
+def test_commit_id_must_not_look_like_an_option(tmp_path: Path, value: str) -> None:
+    # `/c` consumes the next token whatever it looks like; a leading `-`
+    # would otherwise be handed to `git log` as an option (SI-10).
+    with pytest.raises(UsageError, match="must not start with '-'"):
+        parse_arguments(["/c", value], current_directory=str(tmp_path))
+    with pytest.raises(UsageError, match="requires a commit id"):
+        parse_arguments(["/c", "  "], current_directory=str(tmp_path))
