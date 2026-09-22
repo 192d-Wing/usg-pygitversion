@@ -79,3 +79,50 @@ def test_bounded_truncates() -> None:
     assert dotnet.bounded("abc", 3) == "abc"
     long = "x" * (dotnet.MAX_SUBJECT_LENGTH + 10)
     assert len(dotnet.bounded(long)) == dotnet.MAX_SUBJECT_LENGTH
+
+
+@pytest.mark.parametrize(
+    "pattern",
+    [
+        r"^(a+)+b$",
+        r"(?:x*)*y",
+        r"(\d+\.?)+$",  # the separator is optional
+        r"(a+a)+",  # the separator can be eaten by the inner repeat
+        r"(\w+\s?)+$",
+        r"((?<n>[a-z]+)|q)+",  # a branch alternative that starts unbounded
+        r"(a?b*)*c",  # optional lead-in, then unbounded
+        r"(?=(a+)+b)",  # inside a lookahead
+    ],
+)
+def test_rejects_nested_unbounded_quantifiers(pattern: str) -> None:
+    # `(a+)+` is exponential in the subject; the stdlib engine cannot be
+    # interrupted, so the shape is refused at compile time (SI-10).
+    with pytest.raises(ConfigurationError, match="nests an unbounded quantifier"):
+        dotnet.compile(pattern)
+
+
+@pytest.mark.parametrize(
+    "pattern",
+    [
+        r"^Merge (branch|tag) '(?<SourceBranch>[^']*)'(?: into (?<TargetBranch>[^\s]*))*",
+        r"^Finish (?<SourceBranch>[^\s]*)(?: into (?<TargetBranch>[^\s]*))*",
+        r"(?<version>[vV]?\d+(\.\d+)?(\.\d+)?).*",
+        r"(?:\.[0-9a-zA-Z-]+)*",
+        r"^(?<BranchName>[^\s]*)\s(?<Direction>[^\s]*)\s(?<TargetBranch>[^\s]*)",
+        r"[vV]?",
+        r"(a|b)+c",
+        # The conventional-commit pattern from the upstream docs: `.` cannot
+        # match the `\n` that ends every `(.+\n)` iteration.
+        (
+            r"^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([\w\s-]*\))?"
+            r"(!:|:.*\n\n((.+\n)+\n)?BREAKING CHANGE:\s.+)"
+        ),
+        r"(.+\n)+",
+        r"(\d+\.)+\d+",
+        r"(\w+\s)+",
+        r"([^,]+,)*[^,]+",
+    ],
+)
+def test_accepts_repetitions_that_start_with_a_fixed_element(pattern: str) -> None:
+    # Upstream's own defaults and ordinary patterns must keep compiling.
+    dotnet.compile(pattern)

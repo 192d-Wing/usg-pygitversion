@@ -49,12 +49,28 @@ class Shell(StrEnum):
         raise GitVersionError(f"Unknown shell {text!r}; expected one of {names}")
 
 
-def _quote_sh(value: str) -> str:
+def quote_sh(value: str) -> str:
+    r"""Quote ``value`` for POSIX ``sh``/``bash`` so it is inert under ``eval``.
+
+    Single quotes suppress every form of expansion; an embedded single quote
+    is emitted as ``'\''`` (close, escaped quote, reopen). This is the one
+    quoting scheme that is complete for POSIX shells (SI-10).
+    """
     return "'" + value.replace("'", "'\\''") + "'"
 
 
+#: Every character PowerShell's tokenizer treats as a single-quote delimiter
+#: (Language Specification 3.0, section 2.3.5.2): the ASCII apostrophe and
+#: the four Unicode "smart" single quotes. Git allows all of them in branch
+#: names, so each must be doubled or it would close the string early under
+#: ``Invoke-Expression``.
+_POWERSHELL_SINGLE_QUOTES = ("'", "\u2018", "\u2019", "\u201a", "\u201b")
+
+
 def _quote_powershell(value: str) -> str:
-    return "'" + value.replace("'", "''") + "'"
+    for quote in _POWERSHELL_SINGLE_QUOTES:
+        value = value.replace(quote, quote + quote)
+    return "'" + value + "'"
 
 
 def _quote_cmd(value: str) -> str:
@@ -113,7 +129,7 @@ class EnvExporter:
         lines: list[str] = []
         for key, value in self.entries(variables, skip_empty=False):
             if shell in (Shell.SH, Shell.BASH):
-                lines.append(f"export {key}={_quote_sh(value)}")
+                lines.append(f"export {key}={quote_sh(value)}")
             elif shell is Shell.POWERSHELL:
                 lines.append(f"$env:{key} = {_quote_powershell(value)}")
             else:

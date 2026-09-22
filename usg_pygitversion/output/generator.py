@@ -14,7 +14,7 @@ from collections.abc import Mapping
 from pathlib import Path
 
 from usg_pygitversion.buildagents.base import BuildAgent, Writer
-from usg_pygitversion.buildagents.envexport import EnvExporter, write_lines
+from usg_pygitversion.buildagents.envexport import EnvExporter, quote_sh, write_lines
 from usg_pygitversion.calculation.variables import GitVersionVariables
 from usg_pygitversion.cli.arguments import Arguments, OutputType
 from usg_pygitversion.errors import GitVersionError
@@ -27,10 +27,14 @@ _log = logging.getLogger("usg_pygitversion.output")
 def dotenv_lines(variables: GitVersionVariables) -> list[str]:
     """Ports ``WriteDotEnv``: ``GitVersion_<Name>='<value>'`` sorted by name.
 
-    Upstream does not escape quotes in values; the format is reproduced
-    byte for byte so existing consumers keep working.
+    Upstream does not escape quotes in values, so a branch named
+    ``x'$(id)'y`` produces a line that runs ``id`` when the file is sourced.
+    This port quotes with :func:`quote_sh` instead (SI-10; see
+    ``docs/deviations.md``). Output is byte-identical to upstream for every
+    value without a single quote, which is every value the reference tool's
+    own tests produce.
     """
-    return [f"GitVersion_{name}='{value or ''}'" for name, value in sorted(variables)]
+    return [f"GitVersion_{name}={quote_sh(value or '')}" for name, value in sorted(variables)]
 
 
 def write_outputs(

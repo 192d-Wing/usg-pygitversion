@@ -142,3 +142,16 @@ def test_dispatcher_dotenv_suppresses_json_and_env_is_additive(tmp_path: Path) -
     )
     assert lines[0].startswith("export GitVersion_AssemblySemFileVer=")
     assert "GitVersion_FullSemVer=1.2.4-1" in (tmp_path / "vars.env").read_text().splitlines()
+
+
+def test_dotenv_lines_quote_single_quotes_so_sourcing_is_safe() -> None:
+    # A branch name is repository content. Upstream emits it unescaped, which
+    # turns `source GitVersion.env` into code execution; we quote it (SI-10).
+    variables = sample()
+    variables.values["BranchName"] = "feature/x'$(id)'y"  # type: ignore[index]
+    line = next(
+        item for item in dotenv_lines(variables) if item.startswith("GitVersion_BranchName=")
+    )
+    assert line == "GitVersion_BranchName='feature/x'\\''$(id)'\\''y'"
+    # Values without a quote are byte-identical to the reference tool.
+    assert "GitVersion_FullSemVer='1.2.4-1'" in dotenv_lines(variables)

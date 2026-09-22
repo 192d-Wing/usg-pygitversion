@@ -9,9 +9,12 @@ Memory (PLAN.md 9.4): commit walks stream from ``git log`` and stop after
 ``max_commits``; the per-SHA commit cache is bounded; refs are loaded once
 per instance (a run is short-lived) and are small.
 
-Security (AC-3, AC-6): the repository is only ever read. Paths handed to
-git are validated; ref names come from git itself or from callers who
-already validated them, and are passed as discrete argv entries.
+Security (AC-3, AC-6, SI-10): the repository is only ever read. Paths handed
+to git are validated; ref names come from git itself or from callers who
+already validated them, and are passed as discrete argv entries. Every
+revision argument is preceded by ``--end-of-options`` (git >= 2.24) so a
+value such as ``--output=<file>`` can never be parsed as an option, whatever
+the caller did or did not validate.
 """
 
 from __future__ import annotations
@@ -37,6 +40,11 @@ DEFAULT_MAX_COMMITS = 200_000
 #: second NUL so multi-line messages are unambiguous.
 #:   %H  sha   %P parents   %cI committer date ISO-8601   %B raw body
 _LOG_FORMAT = "--format=%H%x00%P%x00%cI%x00%B%x00"
+
+#: Marker after which git treats every remaining argument as a revision or
+#: path, never an option (SI-10). Placed before any revision that did not
+#: originate from git itself.
+_END_OF_OPTIONS = "--end-of-options"
 
 
 class GitRepository:
@@ -160,7 +168,7 @@ class GitRepository:
         if cached is not None:
             return cached
         try:
-            out = self.git.run("log", "-1", _LOG_FORMAT, sha, "--")
+            out = self.git.run("log", "-1", _LOG_FORMAT, _END_OF_OPTIONS, sha, "--")
         except GitCommandError as exc:
             msg = f"unknown revision {sha!r}"
             raise RepositoryError(msg) from exc
@@ -221,6 +229,7 @@ class GitRepository:
         elif order != "default":
             msg = f"unknown walk order {order!r}"
             raise ValueError(msg)
+        args.append(_END_OF_OPTIONS)
         args += includes
         args += [f"^{rev}" for rev in exclude]
         args.append("--")
@@ -263,13 +272,13 @@ class GitRepository:
 
     def merge_base(self, a: str, b: str) -> str | None:
         """Best common ancestor of two revisions, or ``None`` if unrelated."""
-        out = self.git.run("merge-base", a, b, check=False)
+        out = self.git.run("merge-base", _END_OF_OPTIONS, a, b, check=False)
         return out or None
 
     def is_ancestor(self, ancestor: str, descendant: str) -> bool:
         """True when ``ancestor`` is reachable from ``descendant``."""
         try:
-            self.git.run("merge-base", "--is-ancestor", ancestor, descendant)
+            self.git.run("merge-base", "--is-ancestor", _END_OF_OPTIONS, ancestor, descendant)
         except GitCommandError as exc:
             if exc.returncode == 1:
                 return False
@@ -278,12 +287,21 @@ class GitRepository:
 
     def count_commits(self, include: str, exclude: Iterable[str] = ()) -> int:
         """``git rev-list --count include ^exclude``."""
-        args = ["rev-list", "--count", include, *[f"^{rev}" for rev in exclude], "--"]
+        args = [
+            "rev-list",
+            "--count",
+            _END_OF_OPTIONS,
+            include,
+            *[f"^{rev}" for rev in exclude],
+            "--",
+        ]
         return int(self.git.run(*args) or "0")
 
     def changed_paths(self, sha: str) -> tuple[str, ...]:
         """Paths touched by a commit (against its first parent, or the empty tree for a root)."""
-        out = self.git.run("diff-tree", "--no-commit-id", "--name-only", "-r", "--root", sha)
+        out = self.git.run(
+            "diff-tree", "--no-commit-id", "--name-only", "-r", "--root", _END_OF_OPTIONS, sha
+        )
         return tuple(line for line in out.splitlines() if line)
 
     # -- working tree --------------------------------------------------------

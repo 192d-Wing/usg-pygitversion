@@ -171,3 +171,41 @@ def test_differential_gitlab_buildserver(
     ]
     assert ours == expected
     assert (repo.path / "gitversion.properties").read_text() == expected_properties
+
+
+def test_cache_respects_commit_and_branch_switches(
+    repo: RepositoryFixture, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # A warm cache for HEAD must not answer for /c <older commit> or /b (SI-7).
+    repo.make_a_commit()
+    repo.apply_tag("1.0.0")
+    older = repo.make_a_commit()
+    repo.make_a_commit()
+    assert main([str(repo.path), "/showvariable", "FullSemVer"]) == 0
+    assert capsys.readouterr().out.strip() == "1.0.1-2"
+    assert main([str(repo.path), "/c", older, "/showvariable", "FullSemVer"]) == 0
+    assert capsys.readouterr().out.strip() == "1.0.1-1"
+    assert main([str(repo.path), "/c", older, "/nocache", "/showvariable", "FullSemVer"]) == 0
+    assert capsys.readouterr().out.strip() == "1.0.1-1"
+    # Second cached read for the same /c is served from its own entry.
+    assert main([str(repo.path), "/c", older, "/showvariable", "FullSemVer"]) == 0
+    assert capsys.readouterr().out.strip() == "1.0.1-1"
+
+
+def test_configuration_templates_cannot_read_secrets(
+    repo: RepositoryFixture, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # A label in GitVersion.yml is repository content; it must not be able to
+    # lift a credential out of the CI environment (SC-28). /format is the
+    # operator's own input and keeps the full environment.
+    monkeypatch.setenv("DEPLOY_TOKEN", "hunter2")
+    monkeypatch.setenv("BUILD_LABEL", "nightly")
+    repo.make_a_commit()
+    repo.apply_tag("1.0.0")
+    repo.branch_to("feature/x")
+    repo.make_a_commit()
+    repo.write_config("branches:\n  feature:\n    label: '{env:DEPLOY_TOKEN ?? env:BUILD_LABEL}'\n")
+    assert main([str(repo.path), "/nocache", "/showvariable", "PreReleaseLabel"]) == 0
+    assert capsys.readouterr().out.strip() == "nightly"
+    assert main([str(repo.path), "/nocache", "/format", "{SemVer}+{env:DEPLOY_TOKEN}"]) == 0
+    assert capsys.readouterr().out.strip() == "1.0.1-nightly.1+hunter2"

@@ -14,13 +14,58 @@ upstream's ``TryFormat`` returns false for them and the raw value is used.
 
 Validation (SI-10): member names must match ``[A-Za-z0-9_.]+`` and
 environment names ``[A-Za-z0-9_:\\-.]+``; formats are capped at 50 chars.
+
+Secret hygiene (SC-28, SI-11): templates that come from the repository
+(``label``, ``assembly-*-format`` in ``GitVersion.yml``) can read ``{env:NAME}``.
+On a build server that would let anyone who can change the configuration
+copy a CI secret into the version string, the logs and ``$GITHUB_ENV``, and
+the ``u``/``l`` formats defeat log masking by changing its case. Callers pass
+such templates an environment filtered by :func:`redact_secrets`, which
+withholds variables whose names look like credentials. The ``/format``
+command-line switch is the operator's own input and keeps the full
+environment.
 """
 
 from __future__ import annotations
 
+import logging
 import re
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+
+_log = logging.getLogger("usg_pygitversion.formatting")
+
+#: Name fragments that mark an environment variable as a credential. Matched
+#: case-insensitively anywhere in the name. Deliberately broad: a false
+#: positive costs a placeholder its value (and is logged), a false negative
+#: leaks a secret.
+_SECRET_NAME = re.compile(
+    r"secret|token|passw(or)?d|credential|private|api[-_]?key|access[-_]?key|auth|cookie|session",
+    re.IGNORECASE,
+)
+
+
+def redact_secrets(environment: Mapping[str, str]) -> dict[str, str]:
+    """Return a copy of ``environment`` without credential-looking variables.
+
+    Used for templates that originate in repository configuration. Names
+    withheld are reported at DEBUG level (names only, never values).
+    """
+    kept: dict[str, str] = {}
+    withheld: list[str] = []
+    for name, value in environment.items():
+        if _SECRET_NAME.search(name):
+            withheld.append(name)
+        else:
+            kept[name] = value
+    if withheld:
+        _log.debug(
+            "%d environment variable(s) withheld from configuration templates: %s",
+            len(withheld),
+            ", ".join(sorted(withheld)),
+        )
+    return kept
+
 
 _EXPAND_TOKENS = re.compile(r"\{([^{}]+)\}")
 _MEMBER_NAME = re.compile(r"^[A-Za-z0-9_.]+$")

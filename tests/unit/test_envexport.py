@@ -76,3 +76,16 @@ def test_shell_parse() -> None:
     assert Shell.parse("Bash") is Shell.BASH
     with pytest.raises(GitVersionError, match="Unknown shell"):
         Shell.parse("fish")
+
+
+def test_powershell_quoting_doubles_unicode_single_quotes() -> None:
+    # PowerShell treats U+2018..U+201B as single-quote delimiters (Language
+    # Specification 3.0, 2.3.5.2); git allows them in branch names. Built
+    # from code points so the source stays unambiguous (RUF001).
+    left, right, low9, high9 = (chr(c) for c in (0x2018, 0x2019, 0x201A, 0x201B))
+    variables = sample()
+    variables.values["BranchName"] = f"x{right}$(id){left}y{low9}z{high9}"  # type: ignore[index]
+    ps = EnvExporter().shell_lines(variables, Shell.POWERSHELL)
+    line = next(item for item in ps if item.startswith("$env:GitVersion_BranchName"))
+    expected = f"'x{right * 2}$(id){left * 2}y{low9 * 2}z{high9 * 2}'"
+    assert line == f"$env:GitVersion_BranchName = {expected}"
