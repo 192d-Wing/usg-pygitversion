@@ -64,7 +64,7 @@ jobs:
           uvx --from cyclonedx-bom==7.4.0 cyclonedx-py environment --of JSON -o sbom/sbom.cdx.json "$(uv python find)"
       - name: Verify artefacts are unchanged after SBOM generation (SI-7)
         run: sha256sum -c dist/SHA256SUMS
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-dist
           path: |
